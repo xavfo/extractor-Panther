@@ -15,3 +15,8 @@ storage/
 # Temporales de herramientas
 tools/_schema_dump.txt
 *.log
+
+# Paquete instalable y respaldo con datos de clientes (no se versionan)
+dist/
+sql/vetvisor_completo.sql
+Iniciar VetVisor.bat

@@ -60,6 +60,34 @@ Para cambiar la contraseña desde la terminal:
 .\.venv\Scripts\python.exe tools\crear_admin.py --usuario admin
 ```
 
+## Instalador para el servidor del local
+
+El paquete instalable lleva la aplicación **y la base con los datos actuales**,
+para no tener que importar los XLSX en el servidor.
+
+```powershell
+# 1. Generar el respaldo con datos (excluye la tabla de usuarios)
+.\tools\exportar_base.ps1
+
+# 2. Construir el ZIP del instalador en dist\
+.\tools\empaquetar_instalador.ps1
+```
+
+Se obtiene `dist\VetVisor-instalador-1.0.0.zip` (y su `.sha256`). En el servidor
+se descomprime y se ejecuta:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File instalador\instalar.ps1
+```
+
+El instalador crea `.venv`, verifica o arranca MySQL, carga
+`sql\vetvisor_completo.sql`, escribe `.env`, crea el administrador y deja
+`Iniciar VetVisor.bat` para el arranque diario. Parámetros y detalles en
+`instalador/README-INSTALACION.md`.
+
+> El respaldo y el ZIP **no se versionan** porque contienen datos de clientes.
+> Se generan desde la base del equipo y se copian al servidor por red o disco.
+
 ## Acceso desde la LAN
 
 El visor escucha en `0.0.0.0:8000`, así que se abre desde cualquier equipo del
@@ -113,7 +141,10 @@ Reglas que aplica el importador:
 
 ## Qué copiar al servidor del local
 
-Copia **solo esto**:
+La forma recomendada es el paquete del instalador (ver arriba): lleva la
+aplicación y la base con datos en un solo ZIP.
+
+Si prefieres copiar el proyecto a mano, sube **solo esto**:
 
 ```
 app\                 (código y plantillas)

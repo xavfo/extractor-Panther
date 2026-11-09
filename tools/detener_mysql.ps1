@@ -1,4 +1,4 @@
-param(
+﻿param(
     [int]$Puerto = 3307,
     [string]$Usuario = "root",
     [string]$Clave = ""
