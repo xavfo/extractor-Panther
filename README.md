@@ -156,6 +156,29 @@ Permisos: cualquier usuario con sesión puede editar y agregar notas; restaurar
 un original y ver la auditoría queda para administradores y veterinarios (la
 auditoría, solo administradores).
 
+## Exportar los datos para el cliente
+
+Genera un paquete con la base actual y un libro Excel legible, útil para revisar
+los datos en la primera entrega:
+
+```powershell
+.\tools\exportar_paquete_datos.ps1
+```
+
+Se obtiene `dist\VetVisor-datos-AAAA-MM-DD.zip` con:
+
+- `VetVisor-base-AAAA-MM-DD.sql`: estructura y datos de todas las tablas
+  (excluye `usuarios`).
+- `VetVisor-datos-AAAA-MM-DD.xlsx`: resumen, pacientes con propietario y totales,
+  informes, vacunas, exámenes, cuenta, citas, correcciones, notas y conteo por
+  tabla.
+- `LEEME.md`: qué contiene y cómo restaurarlo.
+
+El libro usa la vista con correcciones aplicadas; el SQL conserva además el
+valor original. En Panther hay **710 fichas de pacientes** y **700 códigos
+únicos** (10 mascotas tienen dos fichas en fechas distintas): se conservan todas
+para no perder historia y el resumen del libro lo indica.
+
 ## Usuarios y seguridad
 
 - Contraseñas con **PBKDF2-SHA256**, sal por usuario y 260 000 iteraciones.
@@ -239,9 +262,11 @@ tools/
   importar.py      importación por terminal
   crear_admin.py   crear o restablecer usuarios
   verificar_edicion.py  comprueba vista y clave única sin dejar datos
-  *.ps1            arranque de MySQL, respaldo y empaquetado
+  exportar_datos_cliente.py  libro Excel consolidado
+  *.ps1            arranque de MySQL, respaldo, paquete de datos y empaquetado
 docs/
   ARQUITECTURA.md  modelo de datos, reglas y fases
+  LEEME_DATOS.md   explicación del paquete de datos
   QUFACT_INTEGRACION.md  contrato propuesto con QuFact
 ```
 
