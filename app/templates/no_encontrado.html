@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block titulo %}{{ titulo }}{% endblock %}
+
+{% block encabezado %}
+<div><h1>{{ titulo }}</h1></div>
+{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta"><div class="tarjeta-cuerpo">
+  <div class="vacio" style="padding:34px 10px;">
+    {{ icono('buscar') }}
+    <strong style="margin-top:10px;">{{ titulo }}</strong>
+    {{ detalle }}
+  </div>
+  <p style="text-align:center;"><a class="boton boton-claro" href="/">Volver al panel</a></p>
+</div></div>
+{% endblock %}
+
+{% block contenido_publico %}
+<div class="tarjeta"><div class="tarjeta-cuerpo">
+  <h1 style="font-size:1.3rem;">{{ titulo }}</h1>
+  <p class="tarjeta-nota">{{ detalle }}</p>
+  <p style="margin-top:16px;"><a class="boton" href="/login">Ingresar</a></p>
+</div></div>
+{% endblock %}

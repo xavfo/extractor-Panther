@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block titulo %}Panel{% endblock %}
+
+{% block encabezado %}
+<div>
+  <h1>Panel de control</h1>
+  <p class="sub">{{ resumen.pacientes }} pacientes con historia en la base local.</p>
+</div>
+{% endblock %}
+
+{% block contenido %}
+{% if not ultima %}
+<div class="aviso aviso-aviso">
+  {{ icono('alerta') }}
+  <div>
+    <strong>Todavía no se han importado datos.</strong>
+    Entra a <a href="/tablas">Base de datos</a> y pulsa «Importar ahora» para cargar los XLSX de Panther.
+  </div>
+</div>
+{% endif %}
+
+<div class="grid grid-4">
+  <div class="tarjeta stat">
+    <div class="stat-cab"><span class="etq">Pacientes</span><span class="icono">{{ icono('paw') }}</span></div>
+    <div class="cifra">{{ resumen.pacientes }}</div>
+    <div class="nota">Fichas con propietario registrado</div>
+  </div>
+  <div class="tarjeta stat">
+    <div class="stat-cab"><span class="etq">Informes médicos</span><span class="icono">{{ icono('informe') }}</span></div>
+    <div class="cifra">{{ resumen.informes }}</div>
+    <div class="nota">Consultas y notas clínicas</div>
+  </div>
+  <div class="tarjeta stat">
+    <div class="stat-cab"><span class="etq">Exámenes</span><span class="icono">{{ icono('examen') }}</span></div>
+    <div class="cifra">{{ resumen.examenes }}</div>
+    <div class="nota">Con archivo de resultado asociado</div>
+  </div>
+  <div class="tarjeta stat">
+    <div class="stat-cab"><span class="etq">Vacunas aplicadas</span><span class="icono">{{ icono('ok') }}</span></div>
+    <div class="cifra">{{ resumen.vacunas }}</div>
+    <div class="nota">Incluye próxima dosis programada</div>
+  </div>
+</div>
+
+{% if ultima %}
+<div class="tarjeta" style="margin-top:16px;">
+  <div class="tarjeta-cab">
+    <div>
+      <p class="tarjeta-tit">Última importación</p>
+      <p class="tarjeta-nota">{{ ultima.iniciada_en | fecha_hora }} · {{ ultima.detalle }}</p>
+    </div>
+    <span class="chip {{ 'chip-ok' if ultima.estado == 'ok' else ('chip-aviso' if ultima.estado == 'parcial' else 'chip-apagado') }}">
+      {{ ultima.estado | capitalize }}
+    </span>
+  </div>
+  <div class="tarjeta-cuerpo" style="display:flex;gap:26px;flex-wrap:wrap;padding-top:12px;">
+    <div><span class="etq" style="font-size:.7rem;color:var(--suave);text-transform:uppercase;letter-spacing:.08em;">Archivos</span>
+      <div style="font-weight:700;font-size:1.05rem;">{{ ultima.archivos }}</div></div>
+    <div><span class="etq" style="font-size:.7rem;color:var(--suave);text-transform:uppercase;letter-spacing:.08em;">Filas</span>
+      <div style="font-weight:700;font-size:1.05rem;">{{ ultima.filas }}</div></div>
+    <div><span class="etq" style="font-size:.7rem;color:var(--suave);text-transform:uppercase;letter-spacing:.08em;">Tablas</span>
+      <div style="font-weight:700;font-size:1.05rem;">{{ ultima.tablas }}</div></div>
+    <div style="margin-left:auto;"><a href="/tablas">Ver detalle de la base →</a></div>
+  </div>
+</div>
+{% endif %}
+
+<div class="grid grid-2" style="margin-top:16px;">
+  <div class="tarjeta">
+    <div class="tarjeta-cab">
+      <div>
+        <p class="tarjeta-tit">Informes recientes</p>
+        <p class="tarjeta-nota">Últimas consultas registradas en Panther</p>
+      </div>
+      <a href="/informes" class="chip chip-marca">Ver todos</a>
+    </div>
+    {% if informes %}
+    <div class="tabla-marco" style="margin-top:10px;">
+      <table class="tabla-vet">
+        <thead><tr><th>Fecha</th><th>Paciente</th><th>Motivo</th><th></th></tr></thead>
+        <tbody>
+        {% for item in informes %}
+          <tr>
+            <td style="white-space:nowrap;">{{ item.dtFechaInformeMedico | fecha }}</td>
+            <td>
+              <a class="principal" href="/pacientes/{{ item.iCodPaciente }}">{{ item.vchNombrePaciente or 'Sin nombre' }}</a>
+            </td>
+            <td class="crudo">{{ item.vchMotivo | corto(52) }}</td>
+            <td style="text-align:right;"><a href="/informes/{{ item.iCodInformeMedico }}">Abrir</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="vacio"><strong>Sin informes</strong>Importa los datos para verlos aquí.</div>
+    {% endif %}
+  </div>
+
+  <div class="tarjeta">
+    <div class="tarjeta-cab">
+      <div>
+        <p class="tarjeta-tit">Próximas citas</p>
+        <p class="tarjeta-nota">Agenda desde hoy</p>
+      </div>
+    </div>
+    {% if citas %}
+    <div class="tabla-marco" style="margin-top:10px;">
+      <table class="tabla-vet">
+        <thead><tr><th>Fecha</th><th>Hora</th><th>Paciente</th><th>Motivo</th></tr></thead>
+        <tbody>
+        {% for cita in citas %}
+          <tr>
+            <td style="white-space:nowrap;">{{ cita.dtFecha | fecha }}</td>
+            <td>{{ cita.vchHora | valor }}</td>
+            <td><a class="principal" href="/pacientes/{{ cita.iCodPaciente }}">{{ cita.vchNombrePaciente or '—' }}</a></td>
+            <td class="crudo">{{ cita.vchTipoMotivo | corto(36) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="vacio"><strong>Sin citas próximas</strong>La agenda exportada no tiene citas desde hoy.</div>
+    {% endif %}
+  </div>
+</div>
+
+{% if ultima and ultima.tablas_detalle %}
+{% set con_error = ultima.tablas_detalle | selectattr('error') | list %}
+{% if con_error %}
+<div class="tarjeta" style="margin-top:16px;">
+  <div class="tarjeta-cab"><div>
+    <p class="tarjeta-tit">Observaciones de la última importación</p>
+    <p class="tarjeta-nota">Filas descartadas o columnas nuevas detectadas</p>
+  </div></div>
+  <div class="tarjeta-cuerpo">
+    <table class="tabla-vet">
+      <tbody>
+      {% for detalle in con_error %}
+        <tr><td class="principal" style="width:220px;">{{ detalle.tabla }}</td><td class="sec">{{ detalle.error }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

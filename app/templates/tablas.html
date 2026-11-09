@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block titulo %}Base de datos{% endblock %}
+
+{% block encabezado %}
+<div>
+  <h1>Base de datos</h1>
+  <p class="sub">Tablas importadas desde Panther y estado de la última carga.</p>
+</div>
+{% endblock %}
+
+{% block contenido %}
+{% if usuario.rol == 'admin' %}
+<div class="tarjeta" style="margin-bottom:16px;">
+  <div class="tarjeta-cuerpo" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:260px;">
+      <p class="tarjeta-tit">Importar desde la exportación de Panther</p>
+      <p class="tarjeta-nota">
+        Lee los XLSX de la carpeta <code>.src</code> y actualiza la base.
+        Se puede correr varias veces: no duplica pacientes ni borra datos anteriores.
+        Tarda unos segundos.
+      </p>
+    </div>
+    <form method="post" action="/importar" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Importando…';">
+      <button class="boton" type="submit">{{ icono('importar') }} Importar ahora</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+{% if ultima %}
+<div class="tarjeta" style="margin-bottom:16px;">
+  <div class="tarjeta-cab">
+    <div>
+      <p class="tarjeta-tit">Última importación</p>
+      <p class="tarjeta-nota">{{ ultima.iniciada_en | fecha_hora }} · {{ ultima.detalle }}</p>
+    </div>
+    <span class="chip {{ 'chip-ok' if ultima.estado == 'ok' else ('chip-aviso' if ultima.estado == 'parcial' else 'chip-apagado') }}">{{ ultima.estado | capitalize }}</span>
+  </div>
+</div>
+{% endif %}
+
+{% for grupo, lista in tablas | groupby('grupo') %}
+<div class="tarjeta" style="margin-bottom:16px;">
+  <div class="tarjeta-cab"><div>
+    <p class="tarjeta-tit">{{ grupo }}</p>
+    <p class="tarjeta-nota">{{ lista | length }} tabla{{ 's' if lista | length != 1 else '' }}</p>
+  </div></div>
+  <div class="tarjeta-cuerpo" style="padding-top:12px;">
+    <table class="tabla-vet">
+      <thead><tr><th>Tabla</th><th>Nombre técnico</th><th>Clave</th><th class="num">Filas</th><th></th></tr></thead>
+      <tbody>
+      {% for t in lista %}
+        <tr>
+          <td class="principal">{{ t.etiqueta }}</td>
+          <td class="sec"><code>{{ t.nombre }}</code></td>
+          <td class="sec">{{ t.clave }}</td>
+          <td class="num">{{ t.filas }}</td>
+          <td style="text-align:right;"><a href="/tablas/{{ t.nombre }}">Ver</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

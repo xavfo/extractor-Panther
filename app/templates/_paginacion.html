@@ -1,0 +1,19 @@
+{% macro paginacion(request, pagina, paginas) -%}
+{% if paginas > 1 %}
+<div class="paginacion">
+  <div>Página {{ pagina }} de {{ paginas }}</div>
+  <div class="enlaces">
+    {% if pagina > 1 %}
+      <a href="{{ request.url.include_query_params(pagina=pagina - 1) }}">Anterior</a>
+    {% else %}
+      <span class="desactivado">Anterior</span>
+    {% endif %}
+    {% if pagina < paginas %}
+      <a href="{{ request.url.include_query_params(pagina=pagina + 1) }}">Siguiente</a>
+    {% else %}
+      <span class="desactivado">Siguiente</span>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{%- endmacro %}

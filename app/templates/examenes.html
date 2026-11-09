@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_paginacion.html" import paginacion %}
+{% block titulo %}Exámenes{% endblock %}
+
+{% block encabezado %}
+<div>
+  <h1>Exámenes</h1>
+  <p class="sub">
+    {{ total }} examen{{ 'es' if total != 1 else '' }}{% if busqueda %} para «{{ busqueda }}»{% endif %}
+  </p>
+</div>
+{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+  {% if registros %}
+  <div class="tabla-marco">
+    <table class="tabla-vet">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Paciente</th>
+          <th>Tipo de examen</th>
+          <th>Observaciones</th>
+          <th>Archivo</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for x in registros %}
+        <tr>
+          <td style="white-space:nowrap;">{{ x.dtFecha | fecha }}</td>
+          <td>
+            <a class="principal" href="/pacientes/{{ x.iCodPaciente }}">{{ x.vchNombrePaciente or 'Sin nombre' }}</a>
+            <div class="sec">{{ x.propietario or '—' }}</div>
+          </td>
+          <td>{{ x.vchDescripcion | valor }}</td>
+          <td class="crudo">{{ x.vchObservaciones | corto(56) }}</td>
+          <td class="sec">{{ x.vchNombreArchivo | corto(34) }}</td>
+          <td>
+            <span class="chip {{ 'chip-ok' if x.tiEstatus | si_no == 'Sí' else 'chip-apagado' }}">
+              {{ 'Vigente' if x.tiEstatus | si_no == 'Sí' else 'Sin estado' }}
+            </span>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ paginacion(request, pagina, paginas) }}
+  {% else %}
+  <div class="vacio">
+    <strong>No hay exámenes que coincidan</strong>
+    Prueba con otro tipo de examen, paciente o nombre de archivo.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

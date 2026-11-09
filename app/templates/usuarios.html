@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block titulo %}Usuarios{% endblock %}
+
+{% block encabezado %}
+<div>
+  <h1>Usuarios</h1>
+  <p class="sub">Cuentas con acceso al visor en la red del local.</p>
+</div>
+{% endblock %}
+
+{% block contenido %}
+{% if error %}
+<div class="aviso aviso-error">{{ icono('alerta') }}<div>{{ error }}</div></div>
+{% endif %}
+
+<div class="grid" style="grid-template-columns:minmax(0,1fr) 340px; align-items:start;">
+  <div class="tarjeta">
+    <div class="tarjeta-cab"><div>
+      <p class="tarjeta-tit">Equipo</p>
+      <p class="tarjeta-nota">{{ usuarios | length }} cuenta{{ 's' if usuarios | length != 1 else '' }}</p>
+    </div></div>
+    <div class="tarjeta-cuerpo" style="padding-top:12px;">
+      <table class="tabla-vet">
+        <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th>Último acceso</th></tr></thead>
+        <tbody>
+        {% for u in usuarios %}
+          <tr>
+            <td class="principal">{{ u.nombre }}<div class="sec">{{ u.correo or '—' }}</div></td>
+            <td class="sec">{{ u.usuario }}</td>
+            <td><span class="chip {{ 'chip-marca' if u.rol == 'admin' else '' }}">{{ u.rol }}</span></td>
+            <td><span class="chip {{ 'chip-ok' if u.activo else 'chip-apagado' }}">{{ 'Activo' if u.activo else 'Inactivo' }}</span></td>
+            <td class="sec">{{ u.ultimo_acceso | fecha_hora }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="tarjeta-cab"><div>
+      <p class="tarjeta-tit">Nueva cuenta</p>
+      <p class="tarjeta-nota">Mínimo 8 caracteres de contraseña</p>
+    </div></div>
+    <div class="tarjeta-cuerpo" style="padding-top:12px;">
+      <form method="post" action="/usuarios">
+        <div class="campo"><label for="nombre">Nombre completo</label><input id="nombre" name="nombre" required></div>
+        <div class="campo"><label for="usuario">Usuario</label><input id="usuario" name="usuario" required autocomplete="off"></div>
+        <div class="campo"><label for="correo">Correo (opcional)</label><input id="correo" name="correo" type="email"></div>
+        <div class="campo"><label for="rol">Rol</label>
+          <select id="rol" name="rol">
+            <option value="recepcion">Recepción</option>
+            <option value="veterinario">Veterinario</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="campo"><label for="password">Contraseña</label><input id="password" name="password" type="password" required autocomplete="new-password"></div>
+        <button class="boton" type="submit">{{ icono('mas') }} Crear usuario</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

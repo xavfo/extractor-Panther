@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block titulo %}Informe {{ informe.vchNumInformeMedico }}{% endblock %}
+
+{% block encabezado %}
+<div>
+  <a href="/pacientes/{{ informe.iCodPaciente }}?seccion=informes" class="sec" style="font-size:.8rem;">← Historia del paciente</a>
+  <h1>Informe médico {{ informe.vchNumInformeMedico | valor }}</h1>
+  <p class="sub">
+    {{ informe.dtFechaInformeMedico | fecha }}
+    {% if informe.vchNombreMedico %} · {{ informe.vchNombreMedico }}{% elif informe.vchMedico %} · {{ informe.vchMedico }}{% endif %}
+  </p>
+</div>
+{% endblock %}
+
+{% block acciones %}
+<a class="boton boton-claro no-imprimir" href="#" onclick="window.print(); return false;">{{ icono('imprimir') }} Imprimir</a>
+{% endblock %}
+
+{% block contenido %}
+<div class="grid grid-2" style="margin-bottom:16px;">
+  <div class="tarjeta">
+    <div class="tarjeta-cab"><div>
+      <p class="tarjeta-tit">Paciente</p>
+      <p class="tarjeta-nota">Datos al momento del informe</p>
+    </div></div>
+    <div class="tarjeta-cuerpo" style="padding-top:10px;">
+      <div class="dato"><span class="k">Nombre</span><span class="v">
+        <a href="/pacientes/{{ informe.iCodPaciente }}">{{ informe.vchNombrePaciente or 'Sin nombre' }}</a>
+      </span></div>
+      <div class="dato"><span class="k">Especie</span><span class="v">{{ informe.vchEspecie | valor }}</span></div>
+      <div class="dato"><span class="k">Raza / color</span><span class="v">{{ informe.vchRaza | valor }}{% if informe.vchColor and informe.vchColor not in ['.', '-'] %} · {{ informe.vchColor }}{% endif %}</span></div>
+      <div class="dato"><span class="k">Sexo</span><span class="v">{{ informe.vchSexo | valor | capitalize }}</span></div>
+      <div class="dato"><span class="k">Edad</span><span class="v">{{ informe.dtFecNacimiento | edad }}</span></div>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <div class="tarjeta-cab"><div>
+      <p class="tarjeta-tit">Propietario</p>
+      <p class="tarjeta-nota">Contacto registrado</p>
+    </div></div>
+    <div class="tarjeta-cuerpo" style="padding-top:10px;">
+      <div class="dato"><span class="k">Nombre</span><span class="v">
+        {{ [informe.vchNombre, informe.vchPaterno, informe.vchMaterno] | map('limpio') | select | join(' ') or '—' }}
+      </span></div>
+      <div class="dato"><span class="k">Teléfono</span><span class="v">{{ informe.vchTelefono | valor }}</span></div>
+      <div class="dato"><span class="k">Correo</span><span class="v">{{ informe.vchCorreo | valor }}</span></div>
+      <div class="dato"><span class="k">Dirección</span><span class="v">{{ informe.vchDireccion | valor }}</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <div class="tarjeta-cab"><div>
+    <p class="tarjeta-tit">Signos vitales</p>
+    <p class="tarjeta-nota">Tomados durante la consulta</p>
+  </div></div>
+  <div class="tarjeta-cuerpo" style="padding-top:12px;">
+    <div class="signos">
+      <div class="signo"><div class="etq">Peso</div><div class="val">{{ informe.dPeso | medida('kg') }}</div></div>
+      <div class="signo"><div class="etq">Temperatura</div><div class="val">{{ informe.dTemperatura | medida('°C') }}</div></div>
+      <div class="signo"><div class="etq">Frec. cardiaca</div><div class="val">{{ informe.siFrecuenciaCardiaca | medida }}</div></div>
+      <div class="signo"><div class="etq">Frec. respiratoria</div><div class="val">{{ informe.siFrecuenciaRespiratoria | medida }}</div></div>
+      <div class="signo"><div class="etq">Presión arterial</div><div class="val">{{ informe.sPresionArterial | medida }}</div></div>
+      <div class="signo"><div class="etq">Llenado capilar</div><div class="val">{{ informe.iTiempoLlenadoCapilar | medida('s') }}</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="tarjeta" style="margin-top:16px;">
+  <div class="tarjeta-cuerpo">
+    <div class="bloque-clinico">
+      <h3>Motivo de la consulta</h3>
+      <div class="prosa">{{ informe.vchMotivo | valor }}</div>
+    </div>
+    <div class="bloque-clinico">
+      <h3>Nota clínica</h3>
+      <div class="prosa">{{ informe.vchNota | valor }}</div>
+    </div>
+    <div class="bloque-clinico">
+      <h3>Diagnóstico presuntivo</h3>
+      <div class="prosa">{{ informe.sDiagnosticoPresuntivo | valor }}</div>
+    </div>
+    <div class="bloque-clinico">
+      <h3>Diagnóstico diferencial</h3>
+      <div class="prosa">{{ informe.sDiagnosticoDiferencial | valor }}</div>
+    </div>
+    <div class="bloque-clinico">
+      <h3>Pruebas requeridas</h3>
+      <div class="prosa">{{ informe.sPruebasRequeridas | valor }}</div>
+    </div>
+    <div class="bloque-clinico">
+      <h3>Resultado</h3>
+      <div class="prosa">{{ informe.sResultado | valor }}</div>
+    </div>
+    <div class="bloque-clinico">
+      <h3>Receta</h3>
+      <div class="prosa">{{ informe.vchReceta | valor }}</div>
+    </div>
+    <div class="bloque-clinico">
+      <h3>Servicio cobrado</h3>
+      <div class="dato"><span class="k">Servicio</span><span class="v">{{ informe.vchServicio | valor }}</span></div>
+      <div class="dato"><span class="k">Precio</span><span class="v">{{ informe.dPrecioMenudeo | moneda }}</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

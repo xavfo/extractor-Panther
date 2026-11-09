@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block titulo %}Error{% endblock %}
+
+{% block encabezado %}
+<div><h1>No se pudo completar la consulta</h1></div>
+{% endblock %}
+
+{% block contenido %}
+<div class="aviso aviso-error">
+  {{ icono('alerta') }}
+  <div>
+    <strong>La base de datos no respondió como se esperaba.</strong>
+    Revisa que MySQL esté encendido, que la base <code>vetvisor</code> exista y que
+    los datos se hayan importado.
+  </div>
+</div>
+<div class="tarjeta"><div class="tarjeta-cuerpo">
+  <p class="tarjeta-nota" style="margin-bottom:6px;">Detalle técnico</p>
+  <pre style="white-space:pre-wrap;font-size:.8rem;color:#8f1d16;margin:0;">{{ error }}</pre>
+  <p style="margin-top:16px;"><a class="boton boton-claro" href="/tablas">Ir a la base de datos</a></p>
+</div></div>
+{% endblock %}
+
+{% block contenido_publico %}
+<div class="tarjeta"><div class="tarjeta-cuerpo">
+  <h1 style="font-size:1.3rem;">No se pudo completar la consulta</h1>
+  <p class="tarjeta-nota">{{ error }}</p>
+  <p style="margin-top:16px;"><a class="boton" href="/login">Ingresar</a></p>
+</div></div>
+{% endblock %}

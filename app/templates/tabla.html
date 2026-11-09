@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_paginacion.html" import paginacion %}
+{% block titulo %}{{ tabla.etiqueta }}{% endblock %}
+
+{% block encabezado %}
+<div>
+  <a href="/tablas" class="sec" style="font-size:.8rem;">← Base de datos</a>
+  <h1>{{ tabla.etiqueta }}</h1>
+  <p class="sub"><code>{{ tabla.nombre }}</code> · {{ total }} fila{{ 's' if total != 1 else '' }}</p>
+</div>
+{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+  {% if registros %}
+  <div class="tabla-marco">
+    <table class="tabla-vet">
+      <thead>
+        <tr>{% for columna in columnas %}<th>{{ columna }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+      {% for fila in registros %}
+        <tr>
+        {% for columna in columnas %}
+          <td class="crudo" title="{{ fila[columna] | valor }}">{{ fila[columna] | valor | corto(40) }}</td>
+        {% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ paginacion(request, pagina, paginas) }}
+  {% else %}
+  <div class="vacio">
+    <strong>Tabla vacía</strong>
+    No se ha importado ninguna fila de <code>{{ tabla.nombre }}</code>.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

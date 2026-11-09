@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block titulo %}{{ paciente.vchNombrePaciente }}{% endblock %}
+
+{% block encabezado %}
+<div>
+  <a href="/pacientes" class="sec" style="font-size:.8rem;">← Volver a pacientes</a>
+  <h1>{{ paciente.vchNombrePaciente or 'Paciente sin nombre' }}</h1>
+  <p class="sub">
+    {{ paciente.vchEspecie | valor }}{% if paciente.vchRaza and paciente.vchRaza not in ['.', '-'] %} · {{ paciente.vchRaza }}{% endif %}
+    {% if paciente.vchSexo %} · {{ paciente.vchSexo | capitalize }}{% endif %}
+    · {{ paciente.dtFecNacimiento | edad }}
+  </p>
+</div>
+{% endblock %}
+
+{% block contenido %}
+{% set propietario = [paciente.vchNombre, paciente.vchPaterno, paciente.vchMaterno] | map('limpio') | select | join(' ') %}
+{% set propietario2 = [paciente.vchNombre2, paciente.vchPaterno2, paciente.vchMaterno2] | map('limpio') | select | join(' ') %}
+
+<div class="ficha">
+  <div>
+    <div class="tarjeta">
+      <div class="tarjeta-cuerpo">
+        <div class="paciente-cab">
+          <div class="avatar-grande">{{ paciente.vchNombrePaciente | iniciales }}</div>
+          <div style="min-width:0;">
+            <h2>{{ paciente.vchNombrePaciente or 'Sin nombre' }}</h2>
+            <p class="meta">
+              {% if paciente.chCodPaciente and paciente.chCodPaciente not in ['.', '-'] %}
+                Código {{ paciente.chCodPaciente }}
+              {% else %}
+                Expediente N.º {{ paciente.iNoPaciente }}
+              {% endif %}
+              · Registrado el {{ paciente.dtFecha | fecha }}
+            </p>
+            <div class="chips">
+              <span class="chip chip-marca">{{ paciente.vchEspecie | valor }}</span>
+              <span class="chip">{{ paciente.vchRaza | valor }}</span>
+              <span class="chip">{{ paciente.vchSexo | valor | capitalize }}</span>
+              {% if paciente.vchColor and paciente.vchColor not in ['.', '-'] %}
+              <span class="chip">{{ paciente.vchColor }}</span>
+              {% endif %}
+              <span class="chip">{{ paciente.dtFecNacimiento | edad }}</span>
+              {% if paciente.bCastrado | si_no == 'Sí' %}<span class="chip chip-ok">Castrado</span>{% endif %}
+              <span class="chip {{ 'chip-ok' if paciente.bActivo | si_no == 'Sí' else 'chip-apagado' }}">
+                {{ 'Activo' if paciente.bActivo | si_no == 'Sí' else 'Inactivo' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="secciones">
+      <a href="?seccion=resumen" class="{{ 'activa' if seccion == 'resumen' else '' }}">Resumen</a>
+      <a href="?seccion=informes" class="{{ 'activa' if seccion == 'informes' else '' }}">Informes <span class="cuenta">{{ historia.informes | length }}</span></a>
+      <a href="?seccion=vacunas" class="{{ 'activa' if seccion == 'vacunas' else '' }}">Vacunas <span class="cuenta">{{ historia.vacunas | length }}</span></a>
+      <a href="?seccion=desparasitaciones" class="{{ 'activa' if seccion == 'desparasitaciones' else '' }}">Desparasitación <span class="cuenta">{{ historia.desparasitaciones | length }}</span></a>
+      <a href="?seccion=examenes" class="{{ 'activa' if seccion == 'examenes' else '' }}">Exámenes <span class="cuenta">{{ historia.examenes | length }}</span></a>
+      <a href="?seccion=cirugias" class="{{ 'activa' if seccion == 'cirugias' else '' }}">Cirugías <span class="cuenta">{{ historia.cirugias | length }}</span></a>
+      <a href="?seccion=hospitalizacion" class="{{ 'activa' if seccion == 'hospitalizacion' else '' }}">Hospitalización <span class="cuenta">{{ historia.hospitalizacion | length }}</span></a>
+      <a href="?seccion=cuenta" class="{{ 'activa' if seccion == 'cuenta' else '' }}">Cuenta <span class="cuenta">{{ historia.cuenta | length }}</span></a>
+      <a href="?seccion=citas" class="{{ 'activa' if seccion == 'citas' else '' }}">Citas <span class="cuenta">{{ historia.citas | length }}</span></a>
+      <a href="?seccion=documentos" class="{{ 'activa' if seccion == 'documentos' else '' }}">Archivos <span class="cuenta">{{ historia.documentos | length }}</span></a>
+    </nav>
+
+    <div class="tarjeta">
+      <div class="tarjeta-cuerpo">
+      {% if seccion == 'resumen' %}
+        <div class="grid grid-2">
+          <div>
+            <div class="bloque-clinico">
+              <h3>Datos del paciente</h3>
+              <div class="dato"><span class="k">Especie</span><span class="v">{{ paciente.vchEspecie | valor }}</span></div>
+              <div class="dato"><span class="k">Raza</span><span class="v">{{ paciente.vchRaza | valor }}</span></div>
+              <div class="dato"><span class="k">Sexo</span><span class="v">{{ paciente.vchSexo | valor | capitalize }}</span></div>
+              <div class="dato"><span class="k">Color</span><span class="v">{{ paciente.vchColor | valor }}</span></div>
+              <div class="dato"><span class="k">Fecha de nacimiento</span><span class="v">{{ paciente.dtFecNacimiento | fecha }}</span></div>
+              <div class="dato"><span class="k">Edad</span><span class="v">{{ paciente.dtFecNacimiento | edad }}</span></div>
+              <div class="dato"><span class="k">Castrado</span><span class="v">{{ paciente.bCastrado | si_no }}</span></div>
+              <div class="dato"><span class="k">Médico asignado</span><span class="v">{{ paciente.vchNombreMedico | valor }}</span></div>
+            </div>
+            <div class="bloque-clinico">
+              <h3>Observaciones</h3>
+              <div class="prosa">{{ paciente.vchObservaciones | valor }}</div>
+            </div>
+          </div>
+          <div>
+            <div class="bloque-clinico">
+              <h3>Propietario</h3>
+              <div class="dato"><span class="k">Nombre</span><span class="v">{{ propietario or '—' }}</span></div>
+              {% if propietario2 %}
+              <div class="dato"><span class="k">Segundo contacto</span><span class="v">{{ propietario2 }}</span></div>
+              {% endif %}
+              <div class="dato"><span class="k">Teléfono</span><span class="v">{{ paciente.vchTelefono | valor }}</span></div>
+              {% if paciente.vchTelefono2 and paciente.vchTelefono2 not in ['.', '-', 'OTRO'] %}
+              <div class="dato"><span class="k">Teléfono 2</span><span class="v">{{ paciente.vchTelefono2 }}</span></div>
+              {% endif %}
+              <div class="dato"><span class="k">Correo</span><span class="v">{{ paciente.vchCorreo | valor }}</span></div>
+              {% if paciente.vchCorreo2 and paciente.vchCorreo2 not in ['.', '-'] %}
+              <div class="dato"><span class="k">Correo 2</span><span class="v">{{ paciente.vchCorreo2 }}</span></div>
+              {% endif %}
+              <div class="dato"><span class="k">Dirección</span><span class="v">{{ paciente.vchDireccion | valor }}</span></div>
+              <div class="dato"><span class="k">Ciudad</span><span class="v">{{ paciente.vchCiudad | valor }}</span></div>
+            </div>
+            <div class="bloque-clinico">
+              <h3>Últimos movimientos</h3>
+              {% if historia.informes %}
+              <div class="dato"><span class="k">Último informe</span><span class="v">{{ historia.informes[0].dtFechaInformeMedico | fecha }}</span></div>
+              {% endif %}
+              {% if historia.vacunas %}
+              <div class="dato"><span class="k">Última vacuna</span><span class="v">{{ historia.vacunas[0].dtFecha | fecha }}</span></div>
+              {% endif %}
+              {% if historia.examenes %}
+              <div class="dato"><span class="k">Último examen</span><span class="v">{{ historia.examenes[0].dtFecha | fecha }}</span></div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+      {% elif seccion == 'informes' %}
+        {% if historia.informes %}
+        <table class="tabla-vet">
+          <thead><tr><th>Fecha</th><th>Motivo</th><th>Diagnóstico presuntivo</th><th>Médico</th><th class="num">Peso</th><th></th></tr></thead>
+          <tbody>
+          {% for i in historia.informes %}
+            <tr>
+              <td style="white-space:nowrap;">{{ i.dtFechaInformeMedico | fecha }}</td>
+              <td class="crudo">{{ i.vchMotivo | corto(60) }}</td>
+              <td class="crudo">{{ i.sDiagnosticoPresuntivo | corto(60) }}</td>
+              <td class="sec">{{ i.vchMedico | valor }}</td>
+              <td class="num">{{ i.dPeso | medida('kg') }}</td>
+              <td style="text-align:right;"><a href="/informes/{{ i.iCodInformeMedico }}">Abrir</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="vacio"><strong>Sin informes</strong>Este paciente no tiene informes médicos exportados.</div>{% endif %}
+
+      {% elif seccion == 'vacunas' %}
+        {% if historia.vacunas %}
+        <table class="tabla-vet">
+          <thead><tr><th>Fecha</th><th>Vacuna aplicada</th><th>Lote</th><th>Próxima dosis</th><th class="num">Peso</th></tr></thead>
+          <tbody>
+          {% for v in historia.vacunas %}
+            <tr>
+              <td style="white-space:nowrap;">{{ v.dtFecha | fecha }}</td>
+              <td class="principal" title="{{ v.sVacunaAplicada | valor }}">{{ v.sVacunaAplicada | corto(70) }}</td>
+              <td class="sec">{{ v.sNumeroLote | valor }}</td>
+              <td>{{ v.dtFechaProgramada | fecha }}{% if v.sProximaVacuna and v.sProximaVacuna not in ['.', '-'] %}<div class="sec">{{ v.sProximaVacuna }}</div>{% endif %}</td>
+              <td class="num">{{ v.dPeso | medida('kg') }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="vacio"><strong>Sin vacunas</strong>No hay vacunas registradas para este paciente.</div>{% endif %}
+
+      {% elif seccion == 'desparasitaciones' %}
+        {% if historia.desparasitaciones %}
+        <table class="tabla-vet">
+          <thead><tr><th>Fecha</th><th>Producto</th><th>Próxima</th><th>Observaciones</th><th class="num">Peso</th></tr></thead>
+          <tbody>
+          {% for d in historia.desparasitaciones %}
+            <tr>
+              <td style="white-space:nowrap;">{{ d.dtFecha | fecha }}</td>
+              <td class="principal" title="{{ d.sProductoAplicado | valor }}">{{ d.sProductoAplicado | corto(60) }}</td>
+              <td>{{ d.dtFechaProxima | fecha }}</td>
+              <td class="crudo">{{ d.sObservaciones | corto(60) }}</td>
+              <td class="num">{{ d.dPeso | medida('kg') }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="vacio"><strong>Sin desparasitaciones</strong>No hay registros de desparasitación.</div>{% endif %}
+
+      {% elif seccion == 'examenes' %}
+        {% if historia.examenes %}
+        <table class="tabla-vet">
+          <thead><tr><th>Fecha</th><th>Descripción</th><th>Observaciones</th><th>Archivo</th><th>Estado</th></tr></thead>
+          <tbody>
+          {% for e in historia.examenes %}
+            <tr>
+              <td style="white-space:nowrap;">{{ e.dtFecha | fecha }}</td>
+              <td class="principal">{{ e.vchDescripcion | valor }}</td>
+              <td class="crudo">{{ e.vchObservaciones | corto(70) }}</td>
+              <td class="sec">{{ e.vchNombreArchivo | corto(34) }}</td>
+              <td><span class="chip {{ 'chip-ok' if e.tiEstatus | si_no == 'Sí' else 'chip-apagado' }}">{{ 'Vigente' if e.tiEstatus | si_no == 'Sí' else 'Sin estado' }}</span></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="vacio"><strong>Sin exámenes</strong>No hay exámenes exportados para este paciente.</div>{% endif %}
+
+      {% elif seccion == 'cirugias' %}
+        {% if historia.cirugias %}
+        <table class="tabla-vet">
+          <thead><tr><th>Fecha</th><th>Descripción</th><th>Observaciones</th><th>Médico</th><th>Revisión</th></tr></thead>
+          <tbody>
+          {% for c in historia.cirugias %}
+            <tr>
+              <td style="white-space:nowrap;">{{ c.dtFecha | fecha }}</td>
+              <td class="principal">{{ c.vchDescripcion | valor }}</td>
+              <td class="crudo">{{ c.vchObservaciones | corto(60) }}</td>
+              <td class="sec">{{ c.vchMedico | valor }}</td>
+              <td>{{ c.dtFechaRevision | valor }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="vacio"><strong>Sin cirugías</strong>No hay cirugías registradas.</div>{% endif %}
+
+      {% elif seccion == 'hospitalizacion' %}
+        {% if historia.hospitalizacion %}
+        <table class="tabla-vet">
+          <thead><tr><th>Ingreso</th><th>Salida</th><th>Motivo</th><th>Diagnóstico</th><th>Jaula</th><th>Médico</th></tr></thead>
+          <tbody>
+          {% for h in historia.hospitalizacion %}
+            <tr>
+              <td style="white-space:nowrap;">{{ h.dtFechaIngreso | fecha }}</td>
+              <td style="white-space:nowrap;">{{ h.dtFechaSalida | fecha }}</td>
+              <td class="crudo">{{ h.vchMotivoIngreso | corto(46) }}</td>
+              <td class="crudo">{{ h.vchDiagnostico | corto(46) }}</td>
+              <td>{{ h.iNumJaula | valor }}</td>
+              <td class="sec">{{ h.vchMedico | valor }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="vacio"><strong>Sin hospitalizaciones</strong>No hay ingresos registrados.</div>{% endif %}
+
+      {% elif seccion == 'cuenta' %}
+        <div class="grid grid-3" style="margin-bottom:14px;">
+          <div class="signo"><div class="etq">Pendiente</div><div class="val">{{ saldo.pendiente | moneda }}</div></div>
+          <div class="signo"><div class="etq">Consumido (histórico)</div><div class="val">{{ saldo.consumido | moneda }}</div></div>
+          <div class="signo"><div class="etq">Movimientos</div><div class="val">{{ historia.cuenta | length }}</div></div>
+        </div>
+        {% if historia.cuenta %}
+        <table class="tabla-vet">
+          <thead><tr><th>Fecha</th><th>Servicio</th><th class="num">Cantidad</th><th class="num">Precio</th><th class="num">Subtotal</th><th>Factura</th><th>Pago</th></tr></thead>
+          <tbody>
+          {% for c in historia.cuenta %}
+            <tr>
+              <td style="white-space:nowrap;">{{ c.dtFecha | fecha }}</td>
+              <td class="crudo">{{ c.vchServicio | valor }}</td>
+              <td class="num">{{ c.dCantidad | numero(2) }}</td>
+              <td class="num">{{ c.dPrecioMenudeo | moneda }}</td>
+              <td class="num">{{ c.dSubtotal | moneda }}</td>
+              <td class="sec">{{ c.iNumFolioFactura if c.iNumFolioFactura not in [None, 0, '0'] else '—' }}</td>
+              <td style="white-space:nowrap;">{{ c.dtFechaPago | fecha }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="vacio"><strong>Sin movimientos</strong>No hay consumos registrados.</div>{% endif %}
+
+      {% elif seccion == 'citas' %}
+        {% if historia.citas %}
+        <table class="tabla-vet">
+          <thead><tr><th>Fecha</th><th>Hora</th><th>Motivo</th><th>Servicio</th><th>Médico</th></tr></thead>
+          <tbody>
+          {% for c in historia.citas %}
+            <tr>
+              <td style="white-space:nowrap;">{{ c.dtFecha | fecha }}</td>
+              <td>{{ c.vchHora | valor }}</td>
+              <td class="principal">{{ c.vchTipoMotivo | valor }}</td>
+              <td class="crudo">{{ c.vchServicio | corto(44) }}</td>
+              <td class="sec">{{ c.vchNombreMedico | valor }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="vacio"><strong>Sin citas</strong>No hay citas en la agenda exportada.</div>{% endif %}
+
+      {% elif seccion == 'documentos' %}
+        {% if historia.documentos %}
+        <table class="tabla-vet">
+          <thead><tr><th>Fecha</th><th>Título</th><th>Categoría</th><th>Archivo</th></tr></thead>
+          <tbody>
+          {% for d in historia.documentos %}
+            <tr>
+              <td style="white-space:nowrap;">{{ d.subido_en | fecha }}</td>
+              <td class="principal">{{ d.titulo }}</td>
+              <td><span class="chip">{{ d.categoria }}</span></td>
+              <td class="sec">{{ d.nombre_original }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="vacio">
+          <strong>Sin archivos</strong>
+          Aquí aparecerán los exámenes, imágenes y documentos que se carguen en la siguiente fase.
+        </div>
+        {% endif %}
+      {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <aside>
+    <div class="tarjeta">
+      <div class="tarjeta-cab"><div>
+        <p class="tarjeta-tit">Propietario</p>
+        <p class="tarjeta-nota">Datos de contacto</p>
+      </div></div>
+      <div class="tarjeta-cuerpo" style="padding-top:10px;">
+        <div class="dato"><span class="k">Nombre</span><span class="v">{{ propietario or '—' }}</span></div>
+        <div class="dato"><span class="k">Teléfono</span><span class="v">{{ paciente.vchTelefono | valor }}</span></div>
+        <div class="dato"><span class="k">Correo</span><span class="v">{{ paciente.vchCorreo | valor }}</span></div>
+        <div class="dato"><span class="k">Dirección</span><span class="v">{{ paciente.vchDireccion | valor }}</span></div>
+        <div class="dato"><span class="k">Ciudad</span><span class="v">{{ paciente.vchCiudad | valor }}</span></div>
+        <div class="dato"><span class="k">Identificación</span><span class="v">{{ paciente.vchRFC | valor }}</span></div>
+      </div>
+    </div>
+
+    <div class="tarjeta" style="margin-top:16px;">
+      <div class="tarjeta-cab"><div>
+        <p class="tarjeta-tit">Cuenta</p>
+        <p class="tarjeta-nota">Saldos según cortes de cuenta</p>
+      </div></div>
+      <div class="tarjeta-cuerpo" style="padding-top:10px;">
+        <div class="dato"><span class="k">Pendiente</span><span class="v">{{ saldo.pendiente | moneda }}</span></div>
+        <div class="dato"><span class="k">Consumido (histórico)</span><span class="v">{{ saldo.consumido | moneda }}</span></div>
+      </div>
+    </div>
+
+    <div class="tarjeta" style="margin-top:16px;">
+      <div class="tarjeta-cab"><div>
+        <p class="tarjeta-tit">Ficha</p>
+        <p class="tarjeta-nota">Origen de los datos</p>
+      </div></div>
+      <div class="tarjeta-cuerpo" style="padding-top:10px;">
+        <div class="dato"><span class="k">Sistema</span><span class="v">Panther</span></div>
+        <div class="dato"><span class="k">Importado</span><span class="v">{{ paciente.dtFecha | fecha }}</span></div>
+        <div class="dato"><span class="k">Expediente</span><span class="v">{{ paciente.iNoPaciente | valor }}</span></div>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

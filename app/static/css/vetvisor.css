@@ -1,0 +1,276 @@
+/* VetVisor · estilos propios sobre Bootstrap 5
+   Paleta verde-teal para lectura prolongada; el objetivo es que la ficha del
+   paciente se lea de un vistazo en la recepción del local. */
+
+:root {
+  --vet-900: #0b3b3c;
+  --vet-800: #0f4f4d;
+  --vet-700: #146f6a;
+  --vet-600: #1b8a80;
+  --vet-500: #22a699;
+  --vet-100: #e7f4f1;
+  --vet-50: #f2f9f7;
+  --tinta: #152b33;
+  --suave: #63777f;
+  --linea: #dfe8e6;
+  --fondo: #f4f7f6;
+  --peligro: #b3261e;
+  --aviso: #8a5a00;
+  --ok: #1e7a4b;
+  --radio: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.94rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--vet-700); text-decoration: none; }
+a:hover { color: var(--vet-600); text-decoration: underline; }
+
+/* ---------- estructura ---------- */
+.app {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 14px;
+  background: linear-gradient(180deg, #0a3435 0%, #0f4f4d 55%, #11605b 100%);
+  color: #d9efe9;
+}
+
+.marca { display: flex; align-items: center; gap: 10px; color: #fff; padding: 2px 6px; }
+.marca img { width: 38px; height: 38px; }
+.marca .nombre { font-size: 1.06rem; font-weight: 750; letter-spacing: -0.02em; line-height: 1.1; }
+.marca .lema { display: block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.16em; color: #9ed0c6; margin-top: 2px; }
+
+.nav-vet { display: flex; flex-direction: column; gap: 3px; }
+.nav-vet a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  color: #cbe5df;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.nav-vet a svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; flex: 0 0 auto; }
+.nav-vet a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; text-decoration: none; }
+.nav-vet a.activo { background: #fff; color: var(--vet-800); font-weight: 650; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18); }
+.nav-vet .grupo { margin: 14px 12px 4px; font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.14em; color: #86bfb4; }
+
+.sidebar .pie { margin-top: auto; border-top: 1px solid rgba(255, 255, 255, 0.14); padding-top: 14px; }
+.usuario-chip { display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #fff; color: var(--vet-800);
+  display: grid; place-items: center; font-weight: 700; font-size: 0.78rem;
+  flex: 0 0 auto;
+}
+.usuario-chip .quien { font-size: 0.82rem; font-weight: 650; color: #fff; line-height: 1.2; }
+.usuario-chip .rol { font-size: 0.7rem; color: #9ed0c6; text-transform: capitalize; }
+.salir { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 0.78rem; color: #9ed0c6; }
+.salir svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.salir:hover { color: #fff; text-decoration: none; }
+
+.contenido { padding: 22px 26px 48px; min-width: 0; }
+
+.topbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.topbar h1 { margin: 0; font-size: 1.34rem; font-weight: 750; letter-spacing: -0.025em; }
+.topbar .sub { margin: 3px 0 0; color: var(--suave); font-size: 0.84rem; }
+.topbar .acciones { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.buscador {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border: 1px solid var(--linea); border-radius: 11px;
+  padding: 8px 12px; min-width: 320px;
+  box-shadow: 0 1px 2px rgba(16, 44, 50, 0.04);
+}
+.buscador svg { width: 17px; height: 17px; stroke: var(--suave); fill: none; stroke-width: 2; flex: 0 0 auto; }
+.buscador input { border: 0; outline: none; width: 100%; font-size: 0.88rem; background: transparent; color: var(--tinta); }
+
+/* ---------- tarjetas ---------- */
+.tarjeta { background: #fff; border: 1px solid var(--linea); border-radius: var(--radio); box-shadow: 0 1px 3px rgba(16, 44, 50, 0.05); }
+.tarjeta-cuerpo { padding: 18px 20px; }
+.tarjeta-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 20px 0; }
+.tarjeta-tit { margin: 0; font-size: 0.95rem; font-weight: 700; letter-spacing: -0.01em; }
+.tarjeta-nota { margin: 2px 0 0; font-size: 0.79rem; color: var(--suave); }
+
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1150px) { .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 860px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+.stat { display: flex; flex-direction: column; gap: 7px; padding: 16px 18px; }
+.stat .etq { font-size: 0.71rem; text-transform: uppercase; letter-spacing: 0.11em; color: var(--suave); font-weight: 600; }
+.stat .cifra { font-size: 1.75rem; font-weight: 780; letter-spacing: -0.035em; line-height: 1; }
+.stat .nota { font-size: 0.77rem; color: var(--suave); }
+.stat .icono { width: 34px; height: 34px; border-radius: 10px; background: var(--vet-100); color: var(--vet-700); display: grid; place-items: center; }
+.stat .icono svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.stat-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* ---------- tablas ---------- */
+.tabla-marco { overflow: auto; border-radius: 0 0 var(--radio) var(--radio); }
+.tabla-vet { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.tabla-vet thead th {
+  background: var(--vet-50); color: #3d5c5a;
+  font-size: 0.71rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
+  padding: 10px 14px; border-bottom: 1px solid var(--linea); white-space: nowrap; text-align: left;
+}
+.tabla-vet td { padding: 10px 14px; border-bottom: 1px solid #eef3f2; vertical-align: middle; }
+.tabla-vet tbody tr:last-child td { border-bottom: 0; }
+.tabla-vet tbody tr:hover { background: #f8fbfa; }
+.tabla-vet .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tabla-vet .principal { font-weight: 650; color: var(--tinta); }
+.tabla-vet .sec { color: var(--suave); font-size: 0.78rem; }
+.tabla-vet td.crudo { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #40575e; }
+
+/* ---------- etiquetas ---------- */
+.chip {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-size: 0.71rem; font-weight: 650; line-height: 1.6;
+  background: #eef4f3; color: #47605f;
+}
+.chip-ok { background: #e5f6ec; color: #166b42; }
+.chip-apagado { background: #f1f3f3; color: #5b6b6b; }
+.chip-aviso { background: #fdf0e4; color: var(--aviso); }
+.chip-marca { background: var(--vet-100); color: var(--vet-700); }
+
+/* ---------- ficha del paciente ---------- */
+.ficha { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(290px, 0.85fr); gap: 16px; }
+@media (max-width: 1000px) { .ficha { grid-template-columns: 1fr; } }
+
+.paciente-cab { display: flex; align-items: center; gap: 14px; }
+.paciente-cab .avatar-grande {
+  width: 54px; height: 54px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--vet-600), var(--vet-800));
+  color: #fff; font-weight: 750; font-size: 1.1rem;
+  display: grid; place-items: center; letter-spacing: 0.02em; flex: 0 0 auto;
+}
+.paciente-cab h2 { margin: 0; font-size: 1.2rem; font-weight: 750; letter-spacing: -0.02em; }
+.paciente-cab .meta { margin: 3px 0 0; color: var(--suave); font-size: 0.82rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.dato { display: flex; justify-content: space-between; gap: 16px; padding: 7px 0; border-bottom: 1px dashed #e7efed; font-size: 0.86rem; }
+.dato:last-child { border-bottom: 0; }
+.dato .k { color: var(--suave); flex: 0 0 auto; }
+.dato .v { font-weight: 550; text-align: right; word-break: break-word; }
+
+.secciones { display: flex; gap: 6px; flex-wrap: wrap; margin: 18px 0 14px; }
+.secciones a { padding: 7px 13px; border-radius: 9px; font-size: 0.82rem; font-weight: 650; color: #43605f; background: #e9f1ef; }
+.secciones a:hover { background: #dcebe8; text-decoration: none; color: var(--vet-800); }
+.secciones a.activa { background: var(--vet-700); color: #fff; }
+.secciones .cuenta { background: #fff; border: 1px solid var(--linea); color: var(--suave); font-weight: 600; }
+
+.vacio { padding: 28px 20px; text-align: center; color: var(--suave); font-size: 0.86rem; }
+.vacio strong { display: block; color: #46605f; margin-bottom: 3px; }
+
+.prosa { white-space: pre-wrap; line-height: 1.6; font-size: 0.9rem; color: #26383e; }
+.bloque-clinico { border-top: 1px solid #eef3f2; padding: 14px 0 2px; }
+.bloque-clinico:first-child { border-top: 0; padding-top: 0; }
+.bloque-clinico h3 { font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--suave); margin: 0 0 6px; font-weight: 700; }
+
+.signos { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.signo { background: var(--vet-50); border: 1px solid #e3efec; border-radius: 10px; padding: 10px 12px; }
+.signo .etq { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--suave); }
+.signo .val { font-size: 1.02rem; font-weight: 700; letter-spacing: -0.02em; }
+
+/* ---------- avisos ---------- */
+.aviso { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 11px; font-size: 0.86rem; margin-bottom: 16px; }
+.aviso svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; flex: 0 0 auto; margin-top: 2px; }
+.aviso-ok { background: #e9f8ef; color: #14603c; }
+.aviso-error { background: #fdecea; color: #8f1d16; }
+.aviso-aviso { background: #fdf4e5; color: #7a5100; }
+.aviso-info { background: var(--vet-100); color: #145b57; }
+
+/* ---------- paginación ---------- */
+.paginacion { display: flex; align-items: center; gap: 10px; justify-content: space-between; padding: 12px 16px; border-top: 1px solid #eef3f2; font-size: 0.82rem; color: var(--suave); }
+.paginacion .enlaces { display: flex; gap: 6px; }
+.paginacion a, .paginacion span {
+  padding: 5px 11px; border-radius: 8px; border: 1px solid var(--linea); background: #fff;
+  color: #425a5e; font-weight: 600;
+}
+.paginacion a:hover { background: var(--vet-50); text-decoration: none; }
+.paginacion span.desactivado { opacity: 0.45; }
+
+/* ---------- formularios ---------- */
+.campo { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.campo label { font-size: 0.78rem; font-weight: 650; color: #3f565c; }
+.campo input, .campo select {
+  border: 1px solid var(--linea); border-radius: 9px; padding: 8px 11px;
+  font-size: 0.9rem; background: #fff; color: var(--tinta); outline: none;
+}
+.campo input:focus, .campo select:focus { border-color: var(--vet-500); box-shadow: 0 0 0 3px rgba(34, 166, 153, 0.14); }
+.boton {
+  display: inline-flex; align-items: center; gap: 7px; justify-content: center;
+  border: 1px solid transparent; border-radius: 9px; padding: 8px 15px;
+  font-size: 0.87rem; font-weight: 650; cursor: pointer;
+  background: var(--vet-700); color: #fff;
+}
+.boton:hover { background: var(--vet-600); color: #fff; text-decoration: none; }
+.boton-claro { background: #fff; border-color: var(--linea); color: #3f565c; }
+.boton-claro:hover { background: var(--vet-50); color: var(--vet-800); }
+.boton svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* ---------- login ---------- */
+.acceso { min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr; }
+@media (max-width: 900px) { .acceso { grid-template-columns: 1fr; } .acceso .lado-marca { display: none; } }
+.lado-marca {
+  background:
+    radial-gradient(1000px 500px at 20% 10%, rgba(34, 166, 153, 0.35), transparent 60%),
+    linear-gradient(160deg, #0a3435, #0f4f4d 60%, #146f6a);
+  color: #eaf7f3; padding: 56px; display: flex; flex-direction: column; justify-content: space-between;
+}
+.lado-marca .marca img { width: 46px; height: 46px; }
+.lado-marca h2 { font-size: 2rem; line-height: 1.15; letter-spacing: -0.035em; margin: 0 0 10px; max-width: 440px; }
+.lado-marca p { color: #b7dcd4; max-width: 420px; font-size: 0.92rem; line-height: 1.55; }
+.lado-marca ul { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 10px; font-size: 0.88rem; color: #cfe9e2; }
+.lado-marca li { display: flex; gap: 9px; align-items: flex-start; }
+.lado-marca li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--vet-500); margin-top: 6px; flex: 0 0 auto; }
+.acceso-form { display: grid; place-items: center; padding: 40px 24px; }
+.acceso-caja { width: 100%; max-width: 360px; }
+.acceso-caja h1 { font-size: 1.5rem; letter-spacing: -0.03em; margin: 0 0 4px; }
+.acceso-caja .sub { color: var(--suave); font-size: 0.86rem; margin: 0 0 22px; }
+.acceso-caja .boton { width: 100%; padding: 10px; }
+.acceso-caja .pie { margin-top: 18px; font-size: 0.74rem; color: #8a9a9d; line-height: 1.5; }
+
+/* ---------- detalle de informe ---------- */
+.informe-cab { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+.informe-cab h2 { margin: 0 0 4px; font-size: 1.16rem; letter-spacing: -0.02em; }
+
+/* ---------- impresión ---------- */
+@media print {
+  .sidebar, .topbar, .secciones, .no-imprimir { display: none !important; }
+  .app { grid-template-columns: 1fr; }
+  .contenido { padding: 0; }
+  .tarjeta { border: 0; box-shadow: none; }
+  body { background: #fff; }
+}
+
+/* ---------- móvil ---------- */
+@media (max-width: 780px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; flex-direction: column; }
+  .nav-vet { flex-direction: row; flex-wrap: wrap; }
+  .nav-vet .grupo { display: none; }
+  .sidebar .pie { margin-top: 8px; }
+  .contenido { padding: 18px 14px 40px; }
+  .buscador { min-width: 0; width: 100%; }
+}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_paginacion.html" import paginacion %}
+{% block titulo %}Pacientes{% endblock %}
+
+{% block encabezado %}
+<div>
+  <h1>Pacientes</h1>
+  <p class="sub">
+    {{ total }} ficha{{ 's' if total != 1 else '' }}{% if busqueda %} para «{{ busqueda }}»{% endif %}
+  </p>
+</div>
+{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+  {% if registros %}
+  <div class="tabla-marco">
+    <table class="tabla-vet">
+      <thead>
+        <tr>
+          <th>Paciente</th>
+          <th>Especie / raza</th>
+          <th>Sexo</th>
+          <th>Propietario</th>
+          <th>Contacto</th>
+          <th>Última visita</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in registros %}
+        <tr>
+          <td>
+            <a class="principal" href="/pacientes/{{ p.iCodPaciente }}">{{ p.vchNombrePaciente or 'Sin nombre' }}</a>
+            <div class="sec">
+              {% if p.chCodPaciente and p.chCodPaciente not in ['.', '-'] %}{{ p.chCodPaciente }}{% else %}N.º {{ p.iNoPaciente }}{% endif %}
+              · {{ p.dtFecNacimiento | edad }}
+            </div>
+          </td>
+          <td>
+            {{ p.vchEspecie | valor }}
+            <div class="sec">{{ p.vchRaza | valor }}</div>
+          </td>
+          <td>
+            <span class="chip">{{ p.vchSexo | valor | capitalize }}</span>
+          </td>
+          <td>
+            {{ [p.vchNombre, p.vchPaterno, p.vchMaterno] | map('limpio') | select | join(' ') or '—' }}
+          </td>
+          <td>
+            {{ p.vchTelefono | valor }}
+            {% if p.vchCorreo %}<div class="sec">{{ p.vchCorreo }}</div>{% endif %}
+          </td>
+          <td style="white-space:nowrap;">{{ p.ultima_visita | fecha }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ paginacion(request, pagina, paginas) }}
+  {% else %}
+  <div class="vacio">
+    <strong>No hay pacientes que coincidan</strong>
+    Prueba con otro nombre, apellido, teléfono o código.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% from "_iconos.html" import icono %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}VetVisor{% endblock %} · VetVisor</title>
+  <link rel="icon" href="/static/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/vetvisor.css">
+</head>
+<body>
+{% if usuario %}
+<div class="app">
+  <aside class="sidebar">
+    <a class="marca" href="/">
+      <img src="/static/img/logo.svg" alt="VetVisor">
+      <span class="nombre">VetVisor<span class="lema">Datos Panther</span></span>
+    </a>
+
+    <nav class="nav-vet">
+      <a href="/" class="{{ 'activo' if ruta == '/' else '' }}">{{ icono('panel') }}<span>Panel</span></a>
+      <a href="/pacientes" class="{{ 'activo' if ruta.startswith('/pacientes') else '' }}">{{ icono('paw') }}<span>Pacientes</span></a>
+      <a href="/informes" class="{{ 'activo' if ruta.startswith('/informes') else '' }}">{{ icono('informe') }}<span>Informes médicos</span></a>
+      <a href="/examenes" class="{{ 'activo' if ruta.startswith('/examenes') else '' }}">{{ icono('examen') }}<span>Exámenes</span></a>
+
+      <div class="grupo">Administración</div>
+      <a href="/tablas" class="{{ 'activo' if ruta.startswith('/tablas') else '' }}">{{ icono('base') }}<span>Base de datos</span></a>
+      {% if usuario.rol == 'admin' %}
+      <a href="/usuarios" class="{{ 'activo' if ruta.startswith('/usuarios') else '' }}">{{ icono('usuarios') }}<span>Usuarios</span></a>
+      {% endif %}
+    </nav>
+
+    <div class="pie">
+      <div class="usuario-chip">
+        <div class="avatar">{{ usuario.nombre | iniciales }}</div>
+        <div>
+          <div class="quien">{{ usuario.nombre }}</div>
+          <div class="rol">{{ usuario.rol }}</div>
+        </div>
+      </div>
+      <a class="salir" href="/logout">{{ icono('salir') }} Cerrar sesión</a>
+    </div>
+  </aside>
+
+  <div class="contenido">
+    <header class="topbar">
+      {% block encabezado %}{% endblock %}
+      <div class="acciones no-imprimir">
+        {% block acciones %}
+        <form class="buscador" action="/pacientes" method="get" role="search">
+          {{ icono('buscar') }}
+          <input type="search" name="q" placeholder="Buscar paciente o propietario" aria-label="Buscar paciente">
+        </form>
+        {% endblock %}
+      </div>
+    </header>
+
+    {% if mensaje %}
+    {% set clase = 'aviso-ok' if tipo_mensaje == 'ok' else ('aviso-error' if tipo_mensaje == 'error' else 'aviso-aviso') %}
+    <div class="aviso {{ clase }} no-imprimir">
+      {{ icono('ok' if tipo_mensaje == 'ok' else 'alerta') }}
+      <div>{{ mensaje }}</div>
+    </div>
+    {% endif %}
+
+    {% block contenido %}{% endblock %}
+  </div>
+</div>
+{% else %}
+<main class="contenido" style="max-width: 900px; margin: 0 auto; padding-top: 60px;">
+  {% block contenido_publico %}
+  <div class="tarjeta">
+    <div class="tarjeta-cuerpo">
+      <h1 style="font-size:1.3rem;margin:0 0 8px;">{{ titulo or 'VetVisor' }}</h1>
+      <p class="tarjeta-nota">{{ detalle or '' }}</p>
+      <p style="margin-top:16px;"><a class="boton" href="/login">Ingresar</a></p>
+    </div>
+  </div>
+  {% endblock %}
+</main>
+{% endif %}
+</body>
+</html>

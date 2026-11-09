@@ -1,0 +1,17 @@
+# Entorno
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Configuración local y secretos
+.env
+.env.local
+
+# Datos del cliente: la exportación de Panther no se versiona.
+.src/
+storage/
+
+# Temporales de herramientas
+tools/_schema_dump.txt
+*.log
