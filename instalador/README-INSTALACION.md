@@ -7,7 +7,8 @@ No viene con `.env`, `.venv` ni datos sueltos: todo se crea al instalar.
 ## Requisitos del equipo
 
 - Windows 10 u 11.
-- **Python 3.10 o superior** instalado y en el PATH.
+- **Python 3.10 a 3.14** instalado y en el PATH. En 3.15 algunos paquetes aún no
+  tienen wheel y pip pediría Visual C++ Build Tools; si eso ocurre, usa 3.14.
 - **MySQL o MariaDB** encendido. En el local se usa el de XAMPP; el instalador
   intenta arrancarlo solo si está en `C:\xampp`.
 - Permiso para ejecutar scripts de PowerShell en esta sesión.
@@ -52,6 +53,7 @@ Opciones útiles:
 | --- | --- |
 | `-Puerto 8080` | cambiar el puerto del visor (por defecto 8000) |
 | `-DbName otra_base` | instalar en otra base |
+| `-Python \"C:\\Python314\\python.exe\"` | usar un intérprete concreto (por ejemplo, 3.14 si 3.15 no tiene wheels) |
 | `-Restaurar` | recargar el respaldo aunque la base ya tenga datos (sobrescribe) |
 | `-AbrirFirewall` | permitir el puerto para los demás equipos de la LAN |
 | `-SinIniciar` | no arrancar el visor al terminar |

@@ -27,7 +27,9 @@ flowchart LR
 
 ## Requisitos
 
-- Windows con Python 3.11 o superior (probado con 3.14).
+- Windows con Python 3.11 a 3.14 (probado con 3.14). Si usas Python 3.15 y pip
+  intenta compilar algo pidiendo *Visual C++ Build Tools*, instala 3.14: algunos
+  paquetes todavía no publican wheel para 3.15.
 - MySQL o MariaDB. En este equipo se usa el de XAMPP en el puerto **3307**.
 - Los XLSX exportados por Panther en la carpeta `.src` del repositorio.
 
@@ -74,7 +76,7 @@ para no tener que importar los XLSX en el servidor.
 .\tools\empaquetar_instalador.ps1
 ```
 
-Se obtiene `dist\VetVisor-instalador-1.0.0.zip` (y su `.sha256`). En el servidor
+Se obtiene `dist\VetVisor-instalador-1.1.1.zip` (y su `.sha256`). En el servidor
 se descomprime y se ejecuta:
 
 ```powershell
@@ -212,6 +214,7 @@ Para comprobar la capa de edición sin dejar datos:
 | Una tabla aparece vacía | El XLSX no estaba en `.src` | Revisa el nombre del archivo en *Base de datos* |
 | La LAN no abre la página | Firewall de Windows | Regla del puerto 8000 (ver arriba) |
 | «Usuario o contraseña incorrectos» | Contraseña inicial sin cambiar | `python tools\crear_admin.py --usuario admin` |
+| `pyyaml` no compila / pide Visual C++ | Python 3.15 sin wheel del paquete | Usa el paquete 1.1.1 (uvicorn sin extras) y, si persiste, instala Python 3.14 |
 
 ## Estructura del repositorio
 

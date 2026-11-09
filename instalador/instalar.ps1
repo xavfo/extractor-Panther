@@ -24,6 +24,7 @@ param(
     [int]$Puerto = 8000,
     [string]$AdminUsuario = "admin",
     [string]$AdminPassword = "",
+    [string]$Python = "",
     [switch]$Restaurar,
     [switch]$AbrirFirewall,
     [switch]$SinIniciar
@@ -80,21 +81,34 @@ Write-Host "Carpeta: $raiz"
 # ---------------------------------------------------------------- Python
 Paso "Comprobando Python"
 $lanzador = $null
-foreach ($candidato in @("py", "python")) {
-    $orden = Get-Command $candidato -ErrorAction SilentlyContinue
-    if ($orden) { $lanzador = $orden.Source; break }
+if ($Python) {
+    if (-not (Test-Path $Python)) {
+        Fallar "No existe el intérprete indicado en -Python: $Python"
+    }
+    $lanzador = $Python
+} else {
+    foreach ($candidato in @("py", "python")) {
+        $orden = Get-Command $candidato -ErrorAction SilentlyContinue
+        if ($orden) { $lanzador = $orden.Source; break }
+    }
 }
 if (-not $lanzador) {
-    Fallar "No se encontró Python 3. Instálalo desde python.org y marca 'Add python.exe to PATH'."
+    Fallar "No se encontró Python 3. Instálalo desde python.org y marca 'Add python.exe to PATH', o indica la ruta con -Python."
 }
 $version = & $lanzador -c "import sys; print('%d.%d' % sys.version_info[:2])"
 $partes = $version.Split(".")
 if ([int]$partes[0] -ne 3 -or [int]$partes[1] -lt 10) {
-    Fallar "Se necesita Python 3.10 o superior (se encontró $version)."
+    Fallar "Se necesita Python 3.10 o superior (se encontró $version en $lanzador)."
 }
-Info "Python $version"
+Info "Python $version ($lanzador)"
 
 $venvPy = Join-Path $raiz ".venv\Scripts\python.exe"
+if (Test-Path $venvPy) {
+    $versionVenv = & $venvPy -c "import sys; print('%d.%d' % sys.version_info[:2])"
+    if ($versionVenv -ne $version) {
+        Fallar "La carpeta .venv usa Python $versionVenv y el instalador encontró $version. Elimina .venv y vuelve a ejecutar (o indica -Python con la versión del entorno)."
+    }
+}
 if (-not (Test-Path $venvPy)) {
     Paso "Creando entorno virtual"
     & $lanzador -m venv .venv
