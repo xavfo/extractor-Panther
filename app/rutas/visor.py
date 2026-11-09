@@ -4,10 +4,19 @@ from __future__ import annotations
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 
-from .. import auth, consultas, importador
+from .. import auth, consultas, edicion, importador
+from ..campos import CAMPOS_PACIENTE, GRUPOS
 from ..web import contexto, plantillas
 
 router = APIRouter()
+
+
+def _ip(request: Request) -> str:
+    return request.client.host if request.client else "desconocida"
+
+
+def _puede_quitar(usuario: dict) -> bool:
+    return usuario.get("rol") in {"admin", "veterinario"}
 
 
 def _exigir_sesion(request: Request) -> RedirectResponse | None:
@@ -73,16 +82,196 @@ def paciente(request: Request, codigo: str, seccion: str = "resumen"):
                          detalle=f"No existe el paciente {codigo}."),
                 status_code=404,
             )
+        correcciones = edicion.correcciones_de(codigo)
+        base = edicion.valores_base(codigo)
+        for campo, correccion in correcciones.items():
+            actual = base.get(campo)
+            correccion["origen_actual"] = actual
+            correccion["origen_cambio"] = (
+                ("" if actual is None else str(actual))
+                != ("" if correccion["valor_original"] is None else str(correccion["valor_original"]))
+            )
         datos = {
             "paciente": ficha,
             "historia": consultas.historia_paciente(codigo),
             "saldo": consultas.saldo_paciente(codigo),
             "seccion": seccion,
+            "correcciones": correcciones,
+            "notas": edicion.listar_notas(codigo),
+            "puede_quitar": _puede_quitar(auth.usuario_sesion(request) or {}),
         }
     except Exception as exc:  # noqa: BLE001
         return _error(request, exc)
     return plantillas.TemplateResponse(
         request, "paciente.html", contexto(request, **datos)
+    )
+
+
+@router.get("/pacientes/{codigo}/editar")
+def editar_paciente(request: Request, codigo: str):
+    redireccion = _exigir_sesion(request)
+    if redireccion:
+        return redireccion
+    try:
+        ficha = consultas.obtener_paciente(codigo)
+        if not ficha:
+            return plantillas.TemplateResponse(
+                request, "no_encontrado.html",
+                contexto(request, titulo="Paciente no encontrado",
+                         detalle=f"No existe el paciente {codigo}."),
+                status_code=404,
+            )
+        correcciones = edicion.correcciones_de(codigo)
+        valores = {
+            campo.nombre: "" if ficha.get(campo.nombre) is None else str(ficha[campo.nombre])
+            for campo in CAMPOS_PACIENTE
+        }
+    except Exception as exc:  # noqa: BLE001
+        return _error(request, exc)
+    return plantillas.TemplateResponse(
+        request,
+        "paciente_editar.html",
+        contexto(
+            request,
+            paciente=ficha,
+            campos=CAMPOS_PACIENTE,
+            grupos=GRUPOS,
+            valores=valores,
+            correcciones=correcciones,
+            errores={},
+            motivo="",
+        ),
+    )
+
+
+@router.post("/pacientes/{codigo}/editar")
+async def guardar_paciente(request: Request, codigo: str):
+    redireccion = _exigir_sesion(request)
+    if redireccion:
+        return redireccion
+    formulario = await request.form()
+    valores = {
+        campo.nombre: str(formulario.get(campo.nombre, "") or "")
+        for campo in CAMPOS_PACIENTE
+    }
+    # Solo se guardan los campos que el formulario envió: un POST incompleto no
+    # debe vaciar el resto de la ficha.
+    enviados = {
+        campo.nombre: valores[campo.nombre]
+        for campo in CAMPOS_PACIENTE
+        if campo.nombre in formulario
+    }
+    motivo = str(formulario.get("motivo", "") or "")
+    usuario = auth.usuario_sesion(request) or {}
+
+    try:
+        ficha = consultas.obtener_paciente(codigo)
+        if not ficha:
+            return plantillas.TemplateResponse(
+                request, "no_encontrado.html",
+                contexto(request, titulo="Paciente no encontrado",
+                         detalle=f"No existe el paciente {codigo}."),
+                status_code=404,
+            )
+        correcciones = edicion.correcciones_de(codigo)
+        errores = edicion.validar(valores)
+    except Exception as exc:  # noqa: BLE001
+        return _error(request, exc)
+
+    if errores:
+        return plantillas.TemplateResponse(
+            request,
+            "paciente_editar.html",
+            contexto(
+                request,
+                paciente=ficha,
+                campos=CAMPOS_PACIENTE,
+                grupos=GRUPOS,
+                valores=valores,
+                correcciones=correcciones,
+                errores=errores,
+                motivo=motivo,
+            ),
+            status_code=400,
+        )
+
+    try:
+        cambios = edicion.guardar_correcciones(usuario, codigo, enviados, motivo, _ip(request))
+    except Exception as exc:  # noqa: BLE001
+        return _error(request, exc)
+
+    if cambios:
+        mensaje = f"Se guardaron {len(cambios)} cambio(s) en la ficha."
+    else:
+        mensaje = "No había cambios que guardar."
+    return RedirectResponse(
+        f"/pacientes/{codigo}?mensaje={_url(mensaje)}&tipo=ok", status_code=303
+    )
+
+
+@router.post("/pacientes/{codigo}/correcciones/{campo}/quitar")
+def quitar_correccion(request: Request, codigo: str, campo: str):
+    redireccion = _exigir_sesion(request)
+    if redireccion:
+        return redireccion
+    usuario = auth.usuario_sesion(request) or {}
+    if not _puede_quitar(usuario):
+        return RedirectResponse(
+            f"/pacientes/{codigo}?mensaje={_url('Solo un administrador o veterinario puede restaurar el original')}&tipo=error",
+            status_code=303,
+        )
+    try:
+        hecho = edicion.quitar_correccion(usuario, codigo, campo, _ip(request))
+    except Exception as exc:  # noqa: BLE001
+        return _error(request, exc)
+    mensaje = "Se restauró el valor original." if hecho else "No había corrección en ese campo."
+    return RedirectResponse(
+        f"/pacientes/{codigo}?mensaje={_url(mensaje)}&tipo=ok", status_code=303
+    )
+
+
+@router.post("/pacientes/{codigo}/notas")
+async def agregar_nota(request: Request, codigo: str):
+    redireccion = _exigir_sesion(request)
+    if redireccion:
+        return redireccion
+    formulario = await request.form()
+    texto = str(formulario.get("nota", "") or "")
+    usuario = auth.usuario_sesion(request) or {}
+    try:
+        edicion.crear_nota(usuario, codigo, texto, _ip(request))
+    except ValueError as exc:
+        return RedirectResponse(
+            f"/pacientes/{codigo}?seccion=notas&mensaje={_url(str(exc))}&tipo=error",
+            status_code=303,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return _error(request, exc)
+    return RedirectResponse(
+        f"/pacientes/{codigo}?seccion=notas&mensaje={_url('Nota agregada.')}&tipo=ok",
+        status_code=303,
+    )
+
+
+@router.post("/pacientes/{codigo}/notas/{nota_id}/eliminar")
+def eliminar_nota(request: Request, codigo: str, nota_id: int):
+    redireccion = _exigir_sesion(request)
+    if redireccion:
+        return redireccion
+    usuario = auth.usuario_sesion(request) or {}
+    try:
+        hecho = edicion.eliminar_nota(usuario, codigo, nota_id, _ip(request))
+    except PermissionError as exc:
+        return RedirectResponse(
+            f"/pacientes/{codigo}?seccion=notas&mensaje={_url(str(exc))}&tipo=error",
+            status_code=303,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return _error(request, exc)
+    mensaje = "Nota eliminada." if hecho else "La nota ya no existe."
+    return RedirectResponse(
+        f"/pacientes/{codigo}?seccion=notas&mensaje={_url(mensaje)}&tipo=ok",
+        status_code=303,
     )
 
 
@@ -203,6 +392,23 @@ def _url(texto: str) -> str:
     from urllib.parse import quote_plus
 
     return quote_plus(texto)
+
+
+@router.get("/auditoria")
+def auditoria(request: Request, q: str = "", pagina: int = 1):
+    redireccion = _exigir_sesion(request)
+    if redireccion:
+        return redireccion
+    usuario = auth.usuario_sesion(request) or {}
+    if usuario.get("rol") != "admin":
+        return RedirectResponse("/?mensaje=Sin permisos&tipo=error", status_code=303)
+    try:
+        datos = consultas.listar_auditoria(q, pagina)
+    except Exception as exc:  # noqa: BLE001
+        return _error(request, exc)
+    return plantillas.TemplateResponse(
+        request, "auditoria.html", contexto(request, **datos)
+    )
 
 
 @router.get("/usuarios")

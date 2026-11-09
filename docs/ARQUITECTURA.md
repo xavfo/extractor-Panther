@@ -133,12 +133,31 @@ erDiagram
         int filas
         text error
     }
+    correcciones {
+        bigint id PK
+        varchar tabla
+        varchar clave
+        varchar campo
+        longtext valor
+        longtext valor_original
+        varchar usuario
+        datetime actualizada_en
+    }
+    notas_paciente {
+        bigint id PK
+        varchar iCodPaciente
+        text nota
+        varchar usuario
+        datetime creada_en
+    }
     usuarios ||--o{ auditoria : "registra"
+    usuarios ||--o{ correcciones : "corrige"
+    usuarios ||--o{ notas_paciente : "escribe"
     importaciones ||--o{ importacion_tablas : "detalla"
 ```
 
-`documentos` y `auditoria` se crean ya en la fase 1, pero las pantallas que las
-usan llegan en las fases 2 y 3. Así la base no cambia de forma entre entregas.
+`correcciones`, `notas_paciente` y la vista `pacientes_vista` se crean solas al
+arrancar la aplicación. `documentos` se usa en la fase 3.
 
 ## Reglas de importación
 
@@ -167,9 +186,9 @@ Consecuencia práctica: correr el importador dos veces seguidas deja los mismos
 | Datos en el repositorio | `.env`, `.src/` y `storage/` están en `.gitignore` |
 | Escritura indebida | ninguna ruta escribe en las tablas espejo |
 
-## Fases siguientes
+## Fases
 
-### Fase 2 · Correcciones con auditoría
+### Fase 2 · Correcciones con auditoría (implementada)
 
 Decisión del cliente: las correcciones **no vuelven a Panther**, se guardan en
 MySQL y se conserva el valor original.
@@ -178,24 +197,45 @@ MySQL y se conserva el valor original.
 CREATE TABLE correcciones (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   tabla VARCHAR(64) NOT NULL,
-  clave VARCHAR(128) NOT NULL,
+  clave VARCHAR(191) NOT NULL,
   campo VARCHAR(64) NOT NULL,
-  valor LONGTEXT NULL,
+  valor LONGTEXT NOT NULL,
+  valor_original LONGTEXT NULL,
   usuario_id INT NOT NULL,
   usuario VARCHAR(64) NOT NULL,
   motivo VARCHAR(255) NULL,
   creada_en DATETIME NOT NULL,
+  actualizada_en DATETIME NOT NULL,
   UNIQUE KEY uk_correccion (tabla, clave, campo)
 );
 ```
 
-- La ficha lee `COALESCE(correccion.valor, espejo.campo)`; la pantalla muestra el
-  original y el corregido.
-- Cada cambio se replica en `auditoria` con valor anterior y nuevo.
-- La importación **nunca** toca `correcciones`: si Panther cambia el dato, la
-  corrección sigue visible y se avisa del conflicto.
-- Campos editables en la primera entrega de la fase: contacto del propietario,
-  observaciones, y notas internas del visor.
+- **Vista `pacientes_vista`.** Se arma con un `LEFT JOIN` por campo editable
+  sobre la clave única `(tabla, clave, campo)` y proyecta
+  `COALESCE(correccion.valor, a.columna)`. La lista, la búsqueda y la ficha leen
+  de la vista, así los datos corregidos también se encuentran al buscar.
+- **Campos editables.** Se declaran en `app/campos.py`: nombre, raza y color del
+  paciente; nombre, apellidos, teléfonos, correos, dirección, sector, ciudad e
+  identificación del propietario; y observaciones. Nada de fechas, códigos ni
+  importes.
+- **Valor vacío.** Se guarda como cadena vacía, no como `NULL`, para que
+  `COALESCE` no devuelva el original. Para volver al dato de Panther se usa
+  *Restaurar original*, que borra la corrección.
+- **Conflicto.** Cada corrección guarda `valor_original`. Si Panther cambia ese
+  dato después, la ficha avisa «Origen cambió» y muestra el valor actual del
+  origen.
+- **Notas internas.** `notas_paciente` guarda texto del equipo que no existe en
+  Panther; se pueden borrar el autor o un administrador.
+- **Auditoría.** Cada alta, cambio, restauración y nota se registra en
+  `auditoria` con usuario, fecha, IP, campo, valor anterior y valor nuevo, en la
+  misma transacción que el cambio.
+- **Permisos.** Editar y agregar notas: cualquier usuario con sesión. Restaurar
+  un original: administrador o veterinario. Ver la auditoría: administrador.
+- **Importación.** No toca `correcciones` ni `notas_paciente`; al terminar
+  reconstruye la vista por si el export trajo columnas nuevas.
+- **Verificación.** `tools/verificar_edicion.py` inserta una corrección dentro
+  de una transacción, comprueba la vista y la clave única, y revierte: se puede
+  correr en producción sin dejar rastro.
 
 ### Fase 3 · Archivos
 

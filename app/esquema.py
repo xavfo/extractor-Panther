@@ -371,10 +371,86 @@ CREATE TABLE IF NOT EXISTS `importacion_tablas` (
   `error` TEXT NULL,
   INDEX `idx_importacion` (`importacion_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `correcciones` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `tabla` VARCHAR(64) NOT NULL,
+  `clave` VARCHAR(191) NOT NULL,
+  `campo` VARCHAR(64) NOT NULL,
+  `valor` LONGTEXT NOT NULL,
+  `valor_original` LONGTEXT NULL,
+  `usuario_id` INT NOT NULL,
+  `usuario` VARCHAR(64) NOT NULL,
+  `motivo` VARCHAR(255) NULL,
+  `creada_en` DATETIME NOT NULL,
+  `actualizada_en` DATETIME NOT NULL,
+  UNIQUE KEY `uk_correccion` (`tabla`, `clave`, `campo`),
+  KEY `idx_correccion_clave` (`tabla`, `clave`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `notas_paciente` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `iCodPaciente` VARCHAR(64) NOT NULL,
+  `nota` TEXT NOT NULL,
+  `usuario_id` INT NOT NULL,
+  `usuario` VARCHAR(64) NOT NULL,
+  `creada_en` DATETIME NOT NULL,
+  KEY `idx_notas_paciente` (`iCodPaciente`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 """
+
+
+def crear_vista_pacientes() -> bool:
+    """Vista que muestra las correcciones por encima de los datos de Panther.
+
+    Se arma con un LEFT JOIN por campo editable (la clave única
+    ``tabla + clave + campo`` hace que cada unión devuelva a lo sumo una fila).
+    Si la tabla de pacientes todavía no existe, no se crea nada.
+    """
+    from .campos import CAMPOS_PACIENTE
+
+    columnas = columnas_existentes("TranAfiliado")
+    if not columnas:
+        return False
+    editables = [campo.nombre for campo in CAMPOS_PACIENTE if campo.nombre in columnas]
+    if not editables:
+        return False
+
+    seleccion = []
+    for columna in columnas:
+        if columna in editables:
+            seleccion.append(
+                f"COALESCE(`c_{columna}`.`valor`, a.`{columna}`) AS `{columna}`"
+            )
+        else:
+            seleccion.append(f"a.`{columna}`")
+
+    uniones = "\n".join(
+        f"LEFT JOIN `correcciones` `c_{columna}` "
+        f"ON `c_{columna}`.`tabla` = 'TranAfiliado' "
+        f"AND `c_{columna}`.`clave` = a.`iCodPaciente` "
+        f"AND `c_{columna}`.`campo` = '{columna}'"
+        for columna in editables
+    )
+
+    ejecutar(
+        "CREATE OR REPLACE VIEW `pacientes_vista` AS "
+        f"SELECT {', '.join(seleccion)} FROM `TranAfiliado` a {uniones}"
+    )
+    return True
+
+
+def vista_pacientes_disponible() -> bool:
+    from .db import escalar
+
+    return bool(escalar(
+        "SELECT COUNT(*) FROM information_schema.views "
+        "WHERE table_schema = DATABASE() AND table_name = 'pacientes_vista'"
+    ))
 
 
 def asegurar_tablas_propias() -> None:
     for sentencia in TABLAS_PROPIAS.split(";"):
         if sentencia.strip():
             ejecutar(sentencia)
+    crear_vista_pacientes()

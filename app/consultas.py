@@ -8,9 +8,14 @@ from __future__ import annotations
 from typing import Any
 
 from . import db
-from .esquema import TABLAS, POR_NOMBRE
+from .esquema import TABLAS, POR_NOMBRE, vista_pacientes_disponible
 
 POR_PAGINA = 25
+
+
+def _origen_pacientes() -> str:
+    """Vista con correcciones si existe; si no, la tabla original."""
+    return "pacientes_vista" if vista_pacientes_disponible() else "TranAfiliado"
 
 
 def _patron(busqueda: str) -> str:
@@ -56,7 +61,7 @@ def listar_pacientes(busqueda: str = "", pagina: int = 1) -> dict[str, Any]:
     busqueda = busqueda.strip()
     parametros = {"q": busqueda, "like": _patron(busqueda)}
     total = int(db.escalar(
-        f"SELECT COUNT(*) FROM TranAfiliado a WHERE {_FILTRO_PACIENTE}",
+        f"SELECT COUNT(*) FROM {_origen_pacientes()} a WHERE {_FILTRO_PACIENTE}",
         parametros,
     ) or 0)
     pagina = max(1, pagina)
@@ -69,7 +74,7 @@ def listar_pacientes(busqueda: str = "", pagina: int = 1) -> dict[str, Any]:
                a.bActivo, a.bCastrado, e.vchEspecie,
                (SELECT MAX(i.dtFechaInformeMedico) FROM TranInformeMedico i
                  WHERE i.iCodPaciente = a.iCodPaciente) AS ultima_visita
-        FROM TranAfiliado a
+        FROM {_origen_pacientes()} a
         LEFT JOIN CatEspecies e ON e.iCodEspecie = a.iCodEspecie
         WHERE {_FILTRO_PACIENTE}
         ORDER BY a.vchNombrePaciente
@@ -89,9 +94,9 @@ def listar_pacientes(busqueda: str = "", pagina: int = 1) -> dict[str, Any]:
 
 def obtener_paciente(codigo: str) -> dict[str, Any] | None:
     paciente = db.fila(
-        """
+        f"""
         SELECT a.*, e.vchEspecie
-        FROM TranAfiliado a
+        FROM {_origen_pacientes()} a
         LEFT JOIN CatEspecies e ON e.iCodEspecie = a.iCodEspecie
         WHERE a.iCodPaciente = :codigo
         ORDER BY a.dtFecha DESC
@@ -398,4 +403,43 @@ def filas_tabla(nombre: str, pagina: int = 1) -> dict[str, Any] | None:
         "total": total,
         "pagina": pagina,
         "paginas": max(1, -(-total // POR_PAGINA)),
+    }
+
+
+# --------------------------------------------------------------------------
+# Auditoría
+# --------------------------------------------------------------------------
+
+_FILTRO_AUDITORIA = """
+    (:q = '' OR a.usuario LIKE :like OR a.tabla LIKE :like OR a.clave LIKE :like
+     OR a.campo LIKE :like OR a.valor_anterior LIKE :like OR a.valor_nuevo LIKE :like)
+"""
+
+
+def listar_auditoria(busqueda: str = "", pagina: int = 1) -> dict[str, Any]:
+    busqueda = busqueda.strip()
+    parametros = {"q": busqueda, "like": _patron(busqueda)}
+    total = int(db.escalar(
+        f"SELECT COUNT(*) FROM auditoria a WHERE {_FILTRO_AUDITORIA}",
+        parametros,
+    ) or 0)
+    pagina = max(1, pagina)
+    registros = db.filas(
+        f"""
+        SELECT a.id, a.fecha, a.usuario, a.accion, a.tabla, a.clave, a.campo,
+               a.valor_anterior, a.valor_nuevo
+        FROM auditoria a
+        WHERE {_FILTRO_AUDITORIA}
+        ORDER BY a.id DESC
+        LIMIT :limite OFFSET :desplazamiento
+        """,
+        {**parametros, "limite": POR_PAGINA, "desplazamiento": (pagina - 1) * POR_PAGINA},
+    )
+    return {
+        "registros": registros,
+        "total": total,
+        "pagina": pagina,
+        "por_pagina": POR_PAGINA,
+        "paginas": max(1, -(-total // POR_PAGINA)),
+        "busqueda": busqueda,
     }

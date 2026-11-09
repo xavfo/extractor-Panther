@@ -33,6 +33,16 @@ $ErrorActionPreference = "Stop"
 $raiz = Split-Path -Parent $PSScriptRoot
 Set-Location $raiz
 
+# El instalador manda: si la sesión hereda variables del entorno de otro
+# proyecto, se ignoran para que valga exactamente lo que se escribe en .env.
+foreach ($variableApp in @(
+    "DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD",
+    "SECRETO_SESION", "ADMIN_USUARIO", "ADMIN_PASSWORD",
+    "RUTA_EXPORTACION", "RUTA_ALMACEN", "QUFACT_URL", "QUFACT_TOKEN"
+)) {
+    Remove-Item "Env:$variableApp" -ErrorAction SilentlyContinue
+}
+
 function Paso([string]$texto) {
     Write-Host ""
     Write-Host "== $texto" -ForegroundColor Cyan

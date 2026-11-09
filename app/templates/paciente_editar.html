@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block titulo %}Editar {{ paciente.vchNombrePaciente }}{% endblock %}
+
+{% macro campo_input(campo, valores, correcciones, errores) %}
+{% set valor = valores.get(campo.nombre, '') %}
+{% set correccion = correcciones.get(campo.nombre) %}
+<div class="campo {{ 'campo-ancho' if campo.tipo == 'area' else '' }}">
+  <label for="{{ campo.nombre }}">
+    {{ campo.etiqueta }}
+    {% if correccion %}<span class="chip chip-aviso">corregido</span>{% endif %}
+  </label>
+  {% if campo.tipo == 'area' %}
+  <textarea id="{{ campo.nombre }}" name="{{ campo.nombre }}" rows="6" maxlength="{{ campo.maximo }}">{{ valor }}</textarea>
+  {% else %}
+  {% set tipo = 'email' if campo.tipo == 'correo' else ('tel' if campo.tipo == 'tel' else 'text') %}
+  <input id="{{ campo.nombre }}" name="{{ campo.nombre }}" type="{{ tipo }}" value="{{ valor }}" maxlength="{{ campo.maximo }}">
+  {% endif %}
+  {% if correccion %}
+  <div class="ayuda">En Panther: <strong>{{ correccion.valor_original | valor }}</strong></div>
+  {% endif %}
+  {% if campo.ayuda %}<div class="ayuda">{{ campo.ayuda }}</div>{% endif %}
+  {% if errores.get(campo.nombre) %}<div class="error-campo">{{ errores.get(campo.nombre) }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% block encabezado %}
+<div>
+  <a href="/pacientes/{{ paciente.iCodPaciente }}" class="sec" style="font-size:.8rem;">← Volver a la ficha</a>
+  <h1>Editar ficha</h1>
+  <p class="sub">{{ paciente.vchNombrePaciente }} · {{ paciente.vchEspecie | valor }}</p>
+</div>
+{% endblock %}
+
+{% block acciones %}{% endblock %}
+
+{% block contenido %}
+<div class="aviso aviso-info">
+  {{ icono('alerta') }}
+  <div>
+    <strong>Los cambios se guardan en el visor, no en Panther.</strong>
+    El valor original queda guardado y se puede restaurar desde la ficha.
+    Dejar un campo vacío guarda el campo vacío; para volver al dato de Panther usa
+    «Restaurar original».
+  </div>
+</div>
+
+<form method="post" action="/pacientes/{{ paciente.iCodPaciente }}/editar">
+  {% for grupo in grupos %}
+  <div class="tarjeta" style="margin-bottom:16px;">
+    <div class="tarjeta-cab"><div>
+      <p class="tarjeta-tit">{{ grupo }}</p>
+      <p class="tarjeta-nota">
+        {% if grupo == 'Notas clínicas' %}Texto libre que se muestra en el resumen de la ficha.
+        {% else %}Datos de contacto y descripción; no afectan la historia clínica exportada.{% endif %}
+      </p>
+    </div></div>
+    <div class="tarjeta-cuerpo" style="padding-top:12px;">
+      <div class="grid grid-2">
+        {% for campo in campos | selectattr('grupo', 'equalto', grupo) %}
+          {{ campo_input(campo, valores, correcciones, errores) }}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="tarjeta">
+    <div class="tarjeta-cuerpo">
+      <div class="campo">
+        <label for="motivo">Motivo del cambio (opcional)</label>
+        <input id="motivo" name="motivo" maxlength="255" value="{{ motivo }}" placeholder="Ej.: el cliente actualizó su teléfono">
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="boton" type="submit">{{ icono('ok') }} Guardar cambios</button>
+        <a class="boton boton-claro" href="/pacientes/{{ paciente.iCodPaciente }}">Cancelar</a>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

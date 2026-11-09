@@ -28,6 +28,7 @@
       <a href="/tablas" class="{{ 'activo' if ruta.startswith('/tablas') else '' }}">{{ icono('base') }}<span>Base de datos</span></a>
       {% if usuario.rol == 'admin' %}
       <a href="/usuarios" class="{{ 'activo' if ruta.startswith('/usuarios') else '' }}">{{ icono('usuarios') }}<span>Usuarios</span></a>
+      <a href="/auditoria" class="{{ 'activo' if ruta.startswith('/auditoria') else '' }}">{{ icono('auditoria') }}<span>Auditoría</span></a>
       {% endif %}
     </nav>
 

@@ -8,6 +8,7 @@ from typing import Any
 from fastapi.templating import Jinja2Templates
 
 from . import auth
+from .campos import etiqueta as _etiqueta_campo
 from .config import RAIZ
 
 plantillas = Jinja2Templates(directory=str(RAIZ / "app" / "templates"))
@@ -166,6 +167,7 @@ plantillas.env.filters.update(
         "iniciales": _iniciales,
         "limpio": _limpio,
         "medida": _medida,
+        "campo": _etiqueta_campo,
     }
 )
 

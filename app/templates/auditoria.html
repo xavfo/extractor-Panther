@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "_paginacion.html" import paginacion %}
+{% block titulo %}Auditoría{% endblock %}
+
+{% block encabezado %}
+<div>
+  <h1>Auditoría</h1>
+  <p class="sub">
+    {{ total }} movimiento{{ 's' if total != 1 else '' }}{% if busqueda %} para «{{ busqueda }}»{% endif %}
+  </p>
+</div>
+{% endblock %}
+
+{% block acciones %}
+<form class="buscador" action="/auditoria" method="get" role="search">
+  <input type="search" name="q" value="{{ busqueda }}" placeholder="Buscar usuario, paciente, campo o valor" aria-label="Buscar en la auditoría">
+</form>
+{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+  {% if registros %}
+  <div class="tabla-marco">
+    <table class="tabla-vet">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Usuario</th>
+          <th>Acción</th>
+          <th>Clave</th>
+          <th>Campo</th>
+          <th>Antes</th>
+          <th>Después</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% set etiquetas = {'crear': 'Creó', 'actualizar': 'Actualizó', 'restaurar': 'Restauró', 'nota_crear': 'Nota creada', 'nota_eliminar': 'Nota eliminada'} %}
+      {% for r in registros %}
+        <tr>
+          <td style="white-space:nowrap;">{{ r.fecha | fecha_hora }}</td>
+          <td class="principal">{{ r.usuario }}</td>
+          <td>
+            <span class="chip {{ 'chip-ok' if r.accion in ['crear', 'nota_crear'] else ('chip-apagado' if r.accion == 'restaurar' else 'chip-aviso') }}">
+              {{ etiquetas.get(r.accion, r.accion) }}
+            </span>
+            {% if r.tabla == 'notas_paciente' %}<div class="sec">nota interna</div>{% endif %}
+          </td>
+          <td class="sec">
+            {% if r.tabla in ['TranAfiliado', 'notas_paciente'] %}
+              <a href="/pacientes/{{ r.clave }}">{{ r.clave | corto(16) }}</a>
+            {% else %}
+              {{ r.clave | corto(16) }}
+            {% endif %}
+          </td>
+          <td>{{ r.campo | campo }}</td>
+          <td class="crudo" title="{{ r.valor_anterior | valor }}">{{ r.valor_anterior | corto(30) }}</td>
+          <td class="crudo" title="{{ r.valor_nuevo | valor }}">{{ r.valor_nuevo | corto(30) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ paginacion(request, pagina, paginas) }}
+  {% else %}
+  <div class="vacio">
+    <strong>Sin movimientos</strong>
+    Aquí aparecerán las correcciones y notas que registre el equipo.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

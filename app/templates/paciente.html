@@ -46,11 +46,52 @@
               <span class="chip {{ 'chip-ok' if paciente.bActivo | si_no == 'Sí' else 'chip-apagado' }}">
                 {{ 'Activo' if paciente.bActivo | si_no == 'Sí' else 'Inactivo' }}
               </span>
+              {% if correcciones %}
+              <span class="chip chip-aviso">{{ correcciones | length }} dato{{ 's' if correcciones | length != 1 else '' }} corregido{{ 's' if correcciones | length != 1 else '' }}</span>
+              {% endif %}
             </div>
           </div>
+          <a class="boton no-imprimir" href="/pacientes/{{ paciente.iCodPaciente }}/editar" style="margin-left:auto;">{{ icono('editar') }} Editar ficha</a>
         </div>
       </div>
     </div>
+
+    {% if correcciones %}
+    <div class="tarjeta" style="margin-top:16px;">
+      <div class="tarjeta-cab">
+        <div>
+          <p class="tarjeta-tit">Datos corregidos en el visor</p>
+          <p class="tarjeta-nota">Se muestran en lugar del valor de Panther. El original se conserva y se puede restaurar.</p>
+        </div>
+        <span class="chip chip-aviso">{{ correcciones | length }} campo{{ 's' if correcciones | length != 1 else '' }}</span>
+      </div>
+      <div class="tarjeta-cuerpo" style="padding-top:10px;">
+        {% for nombre, c in correcciones.items() %}
+        <div class="correccion">
+          <div>
+            <div class="correccion-campo">{{ nombre | campo }}</div>
+            <div>
+              <span class="valor-corregido">{{ c.valor | valor }}</span>
+              <span class="valor-original" title="Valor en Panther">{{ c.valor_original | valor }}</span>
+            </div>
+            {% if c.motivo %}<div class="ayuda">Motivo: {{ c.motivo }}</div>{% endif %}
+            <div class="sec">{{ c.usuario }} · {{ c.actualizada_en | fecha_hora }}</div>
+          </div>
+          <div style="text-align:right;">
+            {% if c.origen_cambio %}
+            <div><span class="chip chip-aviso" title="Panther cambió este dato después de la corrección">Origen cambió: {{ c.origen_actual | valor }}</span></div>
+            {% endif %}
+            {% if puede_quitar %}
+            <form method="post" action="/pacientes/{{ paciente.iCodPaciente }}/correcciones/{{ nombre }}/quitar" onsubmit="return confirm('¿Restaurar el valor original de este campo?');" style="margin-top:6px;">
+              <button class="boton boton-claro" type="submit">Restaurar original</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
 
     <nav class="secciones">
       <a href="?seccion=resumen" class="{{ 'activa' if seccion == 'resumen' else '' }}">Resumen</a>
@@ -62,6 +103,7 @@
       <a href="?seccion=hospitalizacion" class="{{ 'activa' if seccion == 'hospitalizacion' else '' }}">Hospitalización <span class="cuenta">{{ historia.hospitalizacion | length }}</span></a>
       <a href="?seccion=cuenta" class="{{ 'activa' if seccion == 'cuenta' else '' }}">Cuenta <span class="cuenta">{{ historia.cuenta | length }}</span></a>
       <a href="?seccion=citas" class="{{ 'activa' if seccion == 'citas' else '' }}">Citas <span class="cuenta">{{ historia.citas | length }}</span></a>
+      <a href="?seccion=notas" class="{{ 'activa' if seccion == 'notas' else '' }}">Notas <span class="cuenta">{{ notas | length }}</span></a>
       <a href="?seccion=documentos" class="{{ 'activa' if seccion == 'documentos' else '' }}">Archivos <span class="cuenta">{{ historia.documentos | length }}</span></a>
     </nav>
 
@@ -292,6 +334,32 @@
           <strong>Sin archivos</strong>
           Aquí aparecerán los exámenes, imágenes y documentos que se carguen en la siguiente fase.
         </div>
+        {% endif %}
+
+      {% elif seccion == 'notas' %}
+        <form method="post" action="/pacientes/{{ paciente.iCodPaciente }}/notas" style="margin-bottom:18px;">
+          <div class="campo">
+            <label for="nota">Nueva nota interna</label>
+            <textarea id="nota" name="nota" rows="3" maxlength="4000" placeholder="Ej.: el propietario pidió llamar antes de la próxima dosis." required></textarea>
+          </div>
+          <button class="boton" type="submit">Agregar nota</button>
+        </form>
+        {% if notas %}
+          {% for n in notas %}
+          <div class="nota">
+            <div class="prosa">{{ n.nota }}</div>
+            <div class="nota-pie">
+              <span class="sec">{{ n.usuario }} · {{ n.creada_en | fecha_hora }}</span>
+              {% if usuario.rol == 'admin' or n.usuario_id == usuario.id %}
+              <form method="post" action="/pacientes/{{ paciente.iCodPaciente }}/notas/{{ n.id }}/eliminar" onsubmit="return confirm('¿Eliminar esta nota?');">
+                <button class="boton boton-claro" type="submit">Eliminar</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="vacio"><strong>Sin notas internas</strong>Las notas que agregues aquí no se envían a Panther.</div>
         {% endif %}
       {% endif %}
       </div>

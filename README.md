@@ -4,10 +4,11 @@ Aplicación web en Python para que el personal del local veterinario **consulte*
 la información que Panther exporta cada día, desde cualquier equipo de la red
 interna. Corre contra MySQL y tiene su propio inicio de sesión.
 
-> **Estado: fase 1 terminada.** Se importan los XLSX, se guardan en MySQL y se
-> consultan en el navegador con usuario administrador. Las correcciones con
-> auditoría, la carga de archivos y la facturación con QuFact están diseñadas y
-> se implementan en las fases siguientes (ver `docs/ARQUITECTURA.md`).
+> **Estado: fases 1 y 2 terminadas.** Se importan los XLSX a MySQL y se consultan
+> en el navegador con usuario administrador. La ficha del paciente se puede
+> corregir con auditoría, sin tocar Panther. La carga de archivos y la
+> facturación con QuFact están diseñadas para las fases siguientes (ver
+> `docs/ARQUITECTURA.md`).
 
 ## Cómo funciona
 
@@ -131,6 +132,28 @@ Reglas que aplica el importador:
 5. **Deja rastro.** Cada corrida queda en `importaciones` con fecha, archivos,
    filas y advertencias, y se ve en el panel y en *Base de datos*.
 
+## Edición con auditoría
+
+En la ficha del paciente, el botón **Editar ficha** permite corregir datos de
+contacto, identificación y observaciones.
+
+- **El dato de Panther nunca se sobrescribe.** Cada cambio se guarda en
+  `correcciones` y la vista `pacientes_vista` muestra la corrección por encima
+  del valor original.
+- **Se puede volver atrás.** El botón *Restaurar original* elimina la corrección
+  y deja el dato de Panther.
+- **Aviso de conflicto.** Si Panther cambió el dato después de la corrección, la
+  ficha muestra «Origen cambió» con el valor actual del sistema de origen.
+- **Notas internas.** La pestaña *Notas* guarda observaciones del equipo que no
+  existen en Panther.
+- **Auditoría.** Todo cambio queda en `auditoria` con usuario, fecha, IP, campo,
+  valor anterior y valor nuevo. La página *Auditoría* (solo administradores)
+  permite buscar por usuario, paciente, campo o valor.
+
+Permisos: cualquier usuario con sesión puede editar y agregar notas; restaurar
+un original y ver la auditoría queda para administradores y veterinarios (la
+auditoría, solo administradores).
+
 ## Usuarios y seguridad
 
 - Contraseñas con **PBKDF2-SHA256**, sal por usuario y 260 000 iteraciones.
@@ -174,6 +197,12 @@ Copy-Item .env.example .env    # ajusta DB_*, SECRETO_SESION y ADMIN_PASSWORD
 3. Abrir *Base de datos* y confirmar que la última importación dice **Ok**.
 4. Buscar un paciente conocido y abrir su ficha y un informe.
 
+Para comprobar la capa de edición sin dejar datos:
+
+```powershell
+.\.venv\Scripts\python.exe tools\verificar_edicion.py
+```
+
 ## Problemas frecuentes
 
 | Síntoma | Causa probable | Solución |
@@ -190,10 +219,12 @@ Copy-Item .env.example .env    # ajusta DB_*, SECRETO_SESION y ADMIN_PASSWORD
 app/
   config.py        lectura de .env
   db.py            conexión SQLAlchemy/MySQL
-  esquema.py       catálogo de tablas, tipos y claves
+  esquema.py       catálogo de tablas, tipos, claves y vista de pacientes
   limpieza.py      normalización de valores de Access
   importador.py    importación idempotente
   consultas.py     SQL de las pantallas
+  campos.py        campos editables de la ficha
+  edicion.py       correcciones, notas y auditoría
   auth.py          usuarios, contraseñas y sesión
   web.py           plantillas, filtros y contexto
   qufact.py        adaptador de facturación (fase 4)
@@ -204,7 +235,8 @@ app/
 tools/
   importar.py      importación por terminal
   crear_admin.py   crear o restablecer usuarios
-  *.ps1            arranque de MySQL y del visor
+  verificar_edicion.py  comprueba vista y clave única sin dejar datos
+  *.ps1            arranque de MySQL, respaldo y empaquetado
 docs/
   ARQUITECTURA.md  modelo de datos, reglas y fases
   QUFACT_INTEGRACION.md  contrato propuesto con QuFact
@@ -212,12 +244,9 @@ docs/
 
 ## Siguientes fases
 
-1. **Actualización con auditoría.** Tabla `correcciones` que guarda el valor
-   nuevo por campo, sin tocar el original, y un historial visible de quién
-   cambió qué. `auditoria` ya está creada para eso.
-2. **Carga de archivos.** Exámenes, imágenes y documentos asociados al paciente.
+1. **Carga de archivos.** Exámenes, imágenes y documentos asociados al paciente.
    La tabla `documentos` y la carpeta `storage/documentos` ya existen; falta la
    pantalla y la validación de tipos y tamaños.
-3. **Facturación QuFact.** Endpoint JSON con token en QuFact y emisión desde el
+2. **Facturación QuFact.** Endpoint JSON con token en QuFact y emisión desde el
    visor a partir de los movimientos de `TranCuentasClientes`. Contrato en
    `docs/QUFACT_INTEGRACION.md`.

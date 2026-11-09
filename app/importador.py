@@ -299,6 +299,13 @@ def importar(carpeta: Path | None = None) -> dict[str, Any]:
             },
         )
 
+    # La vista de pacientes depende de las columnas de TranAfiliado: se
+    # reconstruye para que incluya cualquier columna nueva del export.
+    try:
+        asegurar_tablas_propias()
+    except Exception:  # noqa: BLE001 - se volverá a crear al arrancar la app
+        pass
+
     return {
         "id": importacion_id,
         "estado": estado,

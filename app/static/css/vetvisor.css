@@ -221,7 +221,7 @@ a:hover { color: var(--vet-600); text-decoration: underline; }
 .boton {
   display: inline-flex; align-items: center; gap: 7px; justify-content: center;
   border: 1px solid transparent; border-radius: 9px; padding: 8px 15px;
-  font-size: 0.87rem; font-weight: 650; cursor: pointer;
+  font-size: 0.87rem; font-weight: 650; cursor: pointer; white-space: nowrap;
   background: var(--vet-700); color: #fff;
 }
 .boton:hover { background: var(--vet-600); color: #fff; text-decoration: none; }
@@ -274,3 +274,49 @@ a:hover { color: var(--vet-600); text-decoration: underline; }
   .contenido { padding: 18px 14px 40px; }
   .buscador { min-width: 0; width: 100%; }
 }
+
+/* ---------- edición y auditoría ---------- */
+.campo textarea {
+  border: 1px solid var(--linea);
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--tinta);
+  background: #fff;
+  outline: none;
+  resize: vertical;
+  line-height: 1.5;
+}
+.campo textarea:focus {
+  border-color: var(--vet-500);
+  box-shadow: 0 0 0 3px rgba(34, 166, 153, 0.14);
+}
+.campo-ancho { grid-column: 1 / -1; }
+.ayuda { font-size: 0.75rem; color: var(--suave); margin-top: 2px; }
+.error-campo { font-size: 0.75rem; color: var(--peligro); font-weight: 650; margin-top: 2px; }
+
+.correccion {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #e7efed;
+}
+.correccion:last-child { border-bottom: 0; }
+.correccion-campo {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--suave);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.valor-corregido { font-weight: 650; color: var(--vet-800); }
+.valor-original { text-decoration: line-through; color: #94a5a8; font-size: 0.82rem; margin-left: 8px; }
+
+.nota { padding: 12px 0; border-bottom: 1px solid #eef3f2; }
+.nota:last-child { border-bottom: 0; }
+.nota .prosa { margin-bottom: 6px; }
+.nota-pie { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
